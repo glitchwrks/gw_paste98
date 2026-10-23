@@ -73,6 +73,13 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
     public void startUi(String whyNoTray) {
         service.setStatusListener(this);
         if (!trayActive) {
+            showFallback(whyNoTray);
+        }
+        statusChanged(service.getShortStatus(), service.getDetail());
+    }
+
+    private void showFallback(String whyNoTray) {
+        if (fallback == null) {
             fallback = new FallbackWindow(MENU, new FallbackWindow.ActionIndexListener() {
                 public void action(int index) {
                     trayAction(index);
@@ -82,10 +89,16 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
                     exit();
                 }
             }, icon, whyNoTray);
-            fallback.setStatus(service.getShortStatus());
-            fallback.show();
         }
-        statusChanged(service.getShortStatus(), service.getDetail());
+        fallback.setStatus(service.getShortStatus());
+        fallback.show();
+    }
+
+    /** The tray icon went away on its own; carry on in the fallback window. */
+    public void trayLost(String why) {
+        Log.info("tray lost: " + why);
+        trayActive = false;
+        showFallback(why);
     }
 
     // ---- tray / fallback actions ---------------------------------------------

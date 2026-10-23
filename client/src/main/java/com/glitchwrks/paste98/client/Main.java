@@ -72,6 +72,11 @@ public final class Main {
 
     private static void runTray(boolean wantTray) {
         Log.open(AppDir.file("PASTE98.LOG"));
+        Runtime.getRuntime().addShutdownHook(new Thread("shutdown-log") {
+            public void run() {
+                Log.info("JVM exiting");
+            }
+        });
         Log.info(Version.NAME + " " + Version.VERSION + " starting; Java " + System.getProperty("java.version")
                 + " (" + System.getProperty("java.vm.name") + ") on " + System.getProperty("os.name") + " "
                 + System.getProperty("os.version") + "; folder " + AppDir.get());

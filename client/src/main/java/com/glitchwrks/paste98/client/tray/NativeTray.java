@@ -24,6 +24,12 @@ import com.glitchwrks.paste98.client.Log;
  * nativeRun() runs the Win32 message loop on a dedicated "gwtray" thread
  * until quit(). The DLL calls {@link #onEvent(int)} on that thread; events are
  * handed to the listener on the Swing event thread.
+ *
+ * The "gwtray" thread is deliberately not a daemon thread. In tray mode the
+ * program has no windows open, so AWT shuts its event thread down; if this
+ * thread were a daemon too, nothing would keep the JVM running and it would
+ * exit a second after start-up, leaving a dead icon that vanishes as soon as
+ * the mouse touches it.
  */
 public final class NativeTray {
 
@@ -37,12 +43,18 @@ public final class NativeTray {
     public interface Listener {
         /** A menu item was chosen (index into the labels), or -1 for a double-click on the icon. */
         void trayAction(int item);
+
+        /** The tray message loop ended without {@link NativeTray#stop()}; the icon is gone. */
+        void trayLost(String why);
     }
 
     private static volatile Listener listener;
     private static volatile CountDownLatch ready;
     private static Thread thread;
     private static boolean loaded;
+    /** True while the icon is up (guarded by the start-up result lock). */
+    private static boolean up;
+    private static volatile boolean stopping;
 
     private NativeTray() {
     }
@@ -128,14 +140,27 @@ public final class NativeTray {
                     Log.error("tray thread failed", e);
                     rc = -100;
                 }
+                final boolean lost;
                 synchronized (result) {
                     result[0] = rc;
+                    lost = up && !stopping;
+                    up = false;
                 }
-                Log.info("tray message loop ended: " + rc);
+                Log.info("tray message loop ended: " + rc + (lost ? " (unexpectedly)" : ""));
                 ready.countDown(); // releases start() if setup failed
+                final Listener l = listener;
+                if (lost && l != null) {
+                    final int code = rc;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            l.trayLost("the tray icon stopped unexpectedly (code " + code + ")");
+                        }
+                    });
+                }
             }
         };
-        t.setDaemon(true);
+        t.setDaemon(false); // keeps the JVM alive while the icon is up; see the class comment
+        stopping = false;
         t.start();
         try {
             if (!ready.await(10, TimeUnit.SECONDS)) {
@@ -149,6 +174,7 @@ public final class NativeTray {
             if (result[0] != Integer.MIN_VALUE) {
                 return "the tray icon could not be created (code " + result[0] + ")";
             }
+            up = true;
         }
         thread = t;
         return null;
@@ -165,6 +191,7 @@ public final class NativeTray {
         if (thread == null) {
             return;
         }
+        stopping = true;
         nativeQuit();
         try {
             thread.join(3000);
