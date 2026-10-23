@@ -141,8 +141,9 @@ or has wrong JNI export names or stdcall argument sizes.
 
 Working on a ThinkPad T22 (Pentium III, Java 1.5.0_22, Windows 98): the tray
 icon via `gwtray.dll`, pastes created on production over pinned TLS 1.2 with
-the address copied to the clipboard, and settings in `PASTE98.PRF` through
-the Settings dialog (version 0.2.0).
+the address copied to the clipboard, settings in `PASTE98.PRF` through the
+Settings dialog, fetching and checking the server's key pin, and the
+Appearance setting (version 0.4.0).
 
 Also tested on JDK 8 / Linux: unit tests, the client end to end against the
 fake server, and the Swing UI under Xvfb.
