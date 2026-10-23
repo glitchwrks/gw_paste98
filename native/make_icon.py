@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+# Copyright (C) 2026 Glitch Works, LLC
+# Licensed under the GNU GPL v3 or later. See the LICENSE file for details.
+"""
+Generates the tray icon from the pixel art below, with no dependencies:
+
+  gwtray.ico   16x16 and 32x32, 4 bits per pixel (16 colours) with an AND
+               mask, which every Windows 98 shell displays correctly (32-bit
+               alpha icons are a Windows XP feature)
+  gwtray.png   32x32 RGBA, for Swing window icons (Java 5 reads PNG, not ICO)
+
+Usage: make_icon.py OUTPUT_DIR
+"""
+import os
+import struct
+import sys
+import zlib
+
+# Standard 16-colour Windows palette (index: (r, g, b)).
+PALETTE = [
+    (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
+    (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
+    (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0),
+    (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
+]
+
+# A clipboard: navy board, silver clip, white sheet with text lines.
+# '.' transparent, K black, N navy, S silver, G grey, W white, B blue, Y yellow
+ART16 = [
+    "................",
+    ".....KKKKKK.....",
+    "..KKKKSSSSKKKK..",
+    "..KNNKSSSSKNNK..",
+    "..KNNKKKKKKNNK..",
+    "..KNWWWWWWWWNK..",
+    "..KNWBBBBBWWNK..",
+    "..KNWWWWWWWWNK..",
+    "..KNWGGGGGGWNK..",
+    "..KNWWWWWWWWNK..",
+    "..KNWGGGGWWWNK..",
+    "..KNWWWWWWWWNK..",
+    "..KNWGGGGGWWNK..",
+    "..KNWWWWWWWWNK..",
+    "..KNNNNNNNNNNK..",
+    "..KKKKKKKKKKKK..",
+]
+
+COLOURS = {"K": 0, "N": 4, "S": 7, "G": 8, "W": 15, "B": 12, "Y": 11}
+
+
+def scaled(art, factor):
+    out = []
+    for row in art:
+        wide = "".join(ch * factor for ch in row)
+        out.extend([wide] * factor)
+    return out
+
+
+def ico_image(art):
+    """One 4bpp ICO image: BITMAPINFOHEADER, palette, XOR bitmap, AND mask."""
+    size = len(art)
+    xor_row = ((size * 4 + 31) // 32) * 4
+    and_row = ((size + 31) // 32) * 4
+    xor = bytearray()
+    mask = bytearray()
+    for y in range(size - 1, -1, -1):  # bottom-up
+        row = art[y]
+        line = bytearray(xor_row)
+        mline = bytearray(and_row)
+        for x, ch in enumerate(row):
+            idx = 0 if ch == "." else COLOURS[ch]
+            if x % 2 == 0:
+                line[x // 2] |= idx << 4
+            else:
+                line[x // 2] |= idx
+            if ch == ".":
+                mline[x // 8] |= 0x80 >> (x % 8)
+        xor += line
+        mask += mline
+    header = struct.pack("<IiiHHIIiiII", 40, size, size * 2, 1, 4, 0, len(xor) + len(mask), 0, 0, 16, 0)
+    pal = b"".join(struct.pack("<BBBB", b, g, r, 0) for (r, g, b) in PALETTE)
+    return header + pal + bytes(xor) + bytes(mask)
+
+
+def write_ico(path, arts):
+    images = [ico_image(a) for a in arts]
+    out = struct.pack("<HHH", 0, 1, len(images))
+    offset = 6 + 16 * len(images)
+    for art, img in zip(arts, images):
+        size = len(art)
+        out += struct.pack("<BBBBHHII", size % 256, size % 256, 16, 0, 1, 4, len(img), offset)
+        offset += len(img)
+    out += b"".join(images)
+    with open(path, "wb") as f:
+        f.write(out)
+
+
+def write_png(path, art):
+    size = len(art)
+    raw = bytearray()
+    for row in art:
+        raw.append(0)
+        for ch in row:
+            if ch == ".":
+                raw += b"\x00\x00\x00\x00"
+            else:
+                r, g, b = PALETTE[COLOURS[ch]]
+                raw += bytes((r, g, b, 255))
+
+    def chunk(kind, data):
+        c = struct.pack(">I", len(data)) + kind + data
+        return c + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+
+    png = b"\x89PNG\r\n\x1a\n"
+    png += chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
+    png += chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+    png += chunk(b"IEND", b"")
+    with open(path, "wb") as f:
+        f.write(png)
+
+
+def main(outdir):
+    for row in ART16:
+        assert len(row) == 16, row
+    art32 = scaled(ART16, 2)
+    os.makedirs(outdir, exist_ok=True)
+    write_ico(os.path.join(outdir, "gwtray.ico"), [ART16, art32])
+    write_png(os.path.join(outdir, "gwtray.png"), art32)
+    print("wrote gwtray.ico and gwtray.png to " + outdir)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("usage: make_icon.py OUTPUT_DIR")
+        sys.exit(2)
+    main(sys.argv[1])

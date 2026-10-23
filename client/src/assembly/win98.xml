@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zip ready to copy to the Windows 98 machine:
+    gw_paste98\GWPASTE.JAR     client + Bouncy Castle, shrunk by ProGuard
+    gw_paste98\GWTRAY.DLL      tray icon support (native/gwtray.c)
+    gw_paste98\GWTRAY.ICO      tray icon
+    gw_paste98\PASTE98.CFG     settings (edit the pin in)
+    gw_paste98\PASTE98.BAT     starts the tray app
+    gw_paste98\SENDFILE.BAT    command-line paste
+    gw_paste98\README.TXT, LICENSE.TXT
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>win98</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>gw_paste98</baseDirectory>
+  <files>
+    <file>
+      <source>${project.build.directory}/GWPASTE.JAR</source>
+    </file>
+    <file>
+      <source>${project.basedir}/../native/prebuilt/gwtray.dll</source>
+      <destName>GWTRAY.DLL</destName>
+    </file>
+    <file>
+      <source>${project.basedir}/../native/prebuilt/gwtray.ico</source>
+      <destName>GWTRAY.ICO</destName>
+    </file>
+    <file>
+      <source>${project.basedir}/README.md</source>
+      <destName>README.TXT</destName>
+      <lineEnding>dos</lineEnding>
+    </file>
+    <file>
+      <source>${project.basedir}/../LICENSE</source>
+      <destName>LICENSE.TXT</destName>
+      <lineEnding>dos</lineEnding>
+    </file>
+  </files>
+  <fileSets>
+    <fileSet>
+      <directory>src/dist</directory>
+      <outputDirectory></outputDirectory>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+  </fileSets>
+</assembly>

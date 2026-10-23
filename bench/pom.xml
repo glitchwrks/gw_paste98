@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.glitchwrks.paste98</groupId>
+    <artifactId>gw_paste98-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>gw_paste98-bench</artifactId>
+  <name>gw_paste98 pastebench</name>
+  <description>TLS benchmark for the Java 5 paste client</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.glitchwrks.paste98</groupId>
+      <artifactId>gw_paste98-core</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>pastebench</finalName>
+    <plugins>
+      <!-- Copy dependency jars next to ours so "java -jar FULL\pastebench.jar" works. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-libs</id>
+            <phase>package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+              <stripVersion>false</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.glitchwrks.paste98.bench.PasteBench</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- Shrunk single-jar variants: pastebench-small.jar (deflated) and pastebench-small0.jar (stored). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>shrink</id>
+            <phase>package</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <java classname="proguard.ProGuard" fork="true" failonerror="true"
+                      classpathref="maven.plugin.classpath">
+                  <sysproperty key="target.dir" value="${project.build.directory}"/>
+                  <sysproperty key="manifest.dir" value="${project.basedir}/src/proguard/manifest"/>
+                  <sysproperty key="lib.dir" value="${project.build.directory}/lib"/>
+                  <sysproperty key="bc.version" value="${bc.version}"/>
+                  <sysproperty key="core.version" value="${project.version}"/>
+                  <sysproperty key="jdk8.home" value="${java.home}/.."/>
+                  <arg value="@${project.basedir}/src/proguard/shrink.pro"/>
+                </java>
+                <!--
+                  Stored (uncompressed) copy. Unpack first: copying entries straight
+                  from another archive makes Ant write ZIP64 extra fields, which
+                  Java 5 (no ZIP64 support) rejects as a corrupt jar.
+                -->
+                <delete dir="${project.build.directory}/small-unpacked"/>
+                <delete file="${project.build.directory}/pastebench-small0.jar"/>
+                <unzip src="${project.build.directory}/pastebench-small.jar"
+                       dest="${project.build.directory}/small-unpacked"/>
+                <zip destfile="${project.build.directory}/pastebench-small0.jar" compress="false"
+                     zip64Mode="never" createUnicodeExtraFields="never" encoding="US-ASCII">
+                  <fileset dir="${project.build.directory}/small-unpacked" includes="META-INF/MANIFEST.MF"/>
+                  <fileset dir="${project.build.directory}/small-unpacked" excludes="META-INF/**"/>
+                </zip>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- target/pastebench-win98.zip -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/win98.xml</descriptor>
+          </descriptors>
+          <appendAssemblyId>true</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>win98-zip</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

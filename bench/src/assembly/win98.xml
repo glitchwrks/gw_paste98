@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zip ready to copy to the Win98 machine. Layout:
+    pastebench\SMALL.JAR      ProGuard-shrunk app + Bouncy Castle (deflated)
+    pastebench\SMALL0.JAR     same, stored uncompressed
+    pastebench\FULL\          unshrunk jar + full Bouncy Castle jars, for comparison
+    pastebench\*.BAT, BENCH.CFG, README.TXT
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>win98</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>pastebench</baseDirectory>
+  <files>
+    <file>
+      <source>${project.build.directory}/pastebench-small.jar</source>
+      <destName>SMALL.JAR</destName>
+    </file>
+    <file>
+      <source>${project.build.directory}/pastebench-small0.jar</source>
+      <destName>SMALL0.JAR</destName>
+    </file>
+    <file>
+      <source>${project.build.directory}/pastebench.jar</source>
+      <outputDirectory>FULL</outputDirectory>
+    </file>
+    <file>
+      <source>README.md</source>
+      <destName>README.TXT</destName>
+      <lineEnding>dos</lineEnding>
+    </file>
+  </files>
+  <fileSets>
+    <fileSet>
+      <directory>src/dist</directory>
+      <outputDirectory></outputDirectory>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/lib</directory>
+      <outputDirectory>FULL/lib</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>
