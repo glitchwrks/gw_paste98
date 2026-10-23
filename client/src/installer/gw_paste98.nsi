@@ -24,6 +24,7 @@ SetCompressor /SOLID lzma
 !include "LogicLib.nsh"
 !include "Sections.nsh"
 !include "WordFunc.nsh"
+!include "WinVer.nsh"
 
 !define APP "gw_paste98"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\gw_paste98"
@@ -51,12 +52,18 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Glitch Works, LLC. GNU GPL 
 
 Var JAVAW      ; full path of javaw.exe from the registry
 Var RUNNING    ; set by CheckRunning: 1 if the program is running
+Var FAILED     ; names of shortcuts or files that could not be created
 
 ; ---- Pages ----------------------------------------------------------------
 
 !define MUI_ICON "${STAGE}\GWTRAY.ICO"
 !define MUI_UNICON "${STAGE}\GWTRAY.ICO"
 !define MUI_ABORTWARNING
+; Leave the log on screen after installing; right-click it to copy it.
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+!define MUI_UNFINISHPAGE_NOAUTOCLOSE
+ShowInstDetails show
+ShowUninstDetails show
 !define MUI_COMPONENTSPAGE_NODESC
 
 !insertmacro MUI_PAGE_WELCOME
@@ -82,6 +89,31 @@ Var RUNNING    ; set by CheckRunning: 1 if the program is running
 !insertmacro MUI_UNPAGE_INSTFILES
 
 !insertmacro MUI_LANGUAGE "English"
+
+; All-users shortcuts on Windows NT. Windows 9x is in practice single-user, and
+; its "All Users" Start Menu is not reliably shown, so use the current user's.
+!macro SET_CONTEXT
+  ${If} ${IsNT}
+    SetShellVarContext all
+  ${Else}
+    SetShellVarContext current
+  ${EndIf}
+!macroend
+
+; Records a failure in $FAILED if the error flag is set. ClearErrors first.
+!macro CHECK_FILE name
+  ${IfNot} ${FileExists} "$INSTDIR\${name}"
+    DetailPrint "MISSING: $INSTDIR\${name}"
+    StrCpy $FAILED "$FAILED$\n  $INSTDIR\${name}"
+  ${EndIf}
+!macroend
+
+!macro CHECK_ERRORS what
+  ${If} ${Errors}
+    DetailPrint "FAILED: ${what}"
+    StrCpy $FAILED "$FAILED$\n  ${what}"
+  ${EndIf}
+!macroend
 
 ; ---- Checks -----------------------------------------------------------------
 
@@ -155,6 +187,11 @@ FunctionEnd
 
 Section "${APP} (required)" SecMain
   SectionIn RO
+  DetailPrint "Windows: $WINDIR"
+  DetailPrint "Java: $JAVAW"
+  DetailPrint "Program folder: $INSTDIR"
+  DetailPrint "Start Menu programs folder: $SMPROGRAMS"
+  StrCpy $FAILED ""
   SetOutPath "$INSTDIR"
   File "${STAGE}\GWPASTE.JAR"
   File "${STAGE}\GWTRAY.DLL"
@@ -180,7 +217,18 @@ Section "${APP} (required)" SecMain
   FileWrite $2 ":end$\r$\n"
   FileClose $2
 
+  ClearErrors
   WriteUninstaller "$INSTDIR\UNINST.EXE"
+  !insertmacro CHECK_ERRORS "$INSTDIR\UNINST.EXE"
+
+  ; Check everything actually arrived.
+  !insertmacro CHECK_FILE "GWPASTE.JAR"
+  !insertmacro CHECK_FILE "GWTRAY.DLL"
+  !insertmacro CHECK_FILE "GWTRAY.ICO"
+  !insertmacro CHECK_FILE "README.TXT"
+  !insertmacro CHECK_FILE "LICENSE.TXT"
+  !insertmacro CHECK_FILE "SENDFILE.BAT"
+  !insertmacro CHECK_FILE "UNINST.EXE"
 
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayName" "${APP} ${VERSION}"
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
@@ -195,15 +243,25 @@ SectionEnd
 
 Section "Start Menu shortcuts" SecMenu
   SetOutPath "$INSTDIR" ; the shortcuts' working folder
+  ClearErrors
   CreateDirectory "${MENU_DIR}"
+  !insertmacro CHECK_ERRORS "${MENU_DIR}"
+  ClearErrors
   CreateShortCut "${MENU_DIR}\${APP}.lnk" "$JAVAW" '${JAVA_ARGS} "$INSTDIR\GWPASTE.JAR"' "$INSTDIR\GWTRAY.ICO" 0
+  !insertmacro CHECK_ERRORS "${MENU_DIR}\${APP}.lnk"
+  ClearErrors
   CreateShortCut "${MENU_DIR}\Read me.lnk" "$INSTDIR\README.TXT"
+  !insertmacro CHECK_ERRORS "${MENU_DIR}\Read me.lnk"
+  ClearErrors
   CreateShortCut "${MENU_DIR}\Uninstall ${APP}.lnk" "$INSTDIR\UNINST.EXE"
+  !insertmacro CHECK_ERRORS "${MENU_DIR}\Uninstall ${APP}.lnk"
 SectionEnd
 
 Section /o "Start with Windows" SecStartup
   SetOutPath "$INSTDIR"
+  ClearErrors
   CreateShortCut "${STARTUP_LNK}" "$JAVAW" '${JAVA_ARGS} "$INSTDIR\GWPASTE.JAR"' "$INSTDIR\GWTRAY.ICO" 0
+  !insertmacro CHECK_ERRORS "${STARTUP_LNK}"
 SectionEnd
 
 ; Upgrading: remove shortcuts for options now left unticked.
@@ -217,11 +275,17 @@ Section "-Remove unselected shortcuts"
     Delete "${MENU_DIR}\Uninstall ${APP}.lnk"
     RMDir "${MENU_DIR}"
   ${EndIf}
+
+  ${If} $FAILED != ""
+    MessageBox MB_OK|MB_ICONEXCLAMATION \
+        "Setup could not create:$FAILED$\n$\nThe details below say more. Right-click them and choose Copy Details To Clipboard to save them." \
+        /SD IDOK
+  ${EndIf}
 SectionEnd
 
 ; Here rather than with the other functions: it needs the section indexes.
 Function .onInit
-  SetShellVarContext all
+  !insertmacro SET_CONTEXT
 
   Call FindJava
   ${If} $JAVAW == ""
@@ -245,7 +309,7 @@ FunctionEnd
 ; ---- Uninstaller ------------------------------------------------------------
 
 Function un.onInit
-  SetShellVarContext all
+  !insertmacro SET_CONTEXT
   Call un.CheckRunning
   ${If} $RUNNING == 1
     Abort
