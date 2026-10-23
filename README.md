@@ -77,7 +77,7 @@ effect and adds it only after you confirm you have checked it.
 | Path | What |
 |---|---|
 | `core/` | Pinned TLS 1.2 client (`tls`) and pastes API client (`api`); shared |
-| `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip` |
+| `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip` and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
 | `bench/` | `pastebench`, the TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
 | `tools/` | `fake_pastes_server.py`, a local stand-in for the pastes service, for testing |
@@ -107,6 +107,14 @@ produce Java 5 class files (`-source 1.5 -target 1.5`).
 This compiles everything for Java 5, runs the unit tests, fails the build if
 any code uses an API newer than Java 5 (animal-sniffer), shrinks the jars with
 ProGuard and assembles the two Windows 98 zips.
+
+If **NSIS 3** is installed (`apt install nsis`, or pass
+`-Dmakensis=/path/to/makensis`), the build also makes the Windows installer;
+without it, the build warns and skips it. The installer is built as ANSI
+(`Unicode false`) because NSIS's Unicode installers do not run on Windows
+95/98/ME, and makensis warnings fail the build. It holds an uncompressed copy
+of `GWPASTE.JAR` so its solid LZMA compression covers the whole jar, making
+the installer (~680 KB) about half the size of the zip.
 
 The Maven build uses the committed `native/prebuilt/gwtray.dll`. To rebuild
 the DLL (Zig 0.13 as the cross-compiler, plus Python with `pefile` and
@@ -147,6 +155,10 @@ Appearance setting (version 0.4.0).
 
 Also tested on JDK 8 / Linux: unit tests, the client end to end against the
 fake server, and the Swing UI under Xvfb.
+
+The installer (0.5.0) is tested under Wine in Windows 98 mode only so far:
+Java detection, install, upgrade, the running-program check and uninstall.
+It still needs a run on the T22.
 
 ## Licence
 

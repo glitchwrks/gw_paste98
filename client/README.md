@@ -15,13 +15,37 @@ and certificate list are not used at all.
 | `GWPASTE.JAR` | The program |
 | `GWTRAY.DLL` | Lets Java 5 show a tray icon (Java 5 has no tray support of its own) |
 | `GWTRAY.ICO` | The tray icon |
-| `PASTE98.BAT` | Starts the program |
+| `PASTE98.BAT` | Starts the program (zip only; the installer makes Start Menu shortcuts) |
 | `SENDFILE.BAT` | Sends a text file from the command line |
 | `PASTE98.PRF` | Settings, written by the program (created when you first save settings) |
 | `PASTE98.BAK` | The previous `PASTE98.PRF`, kept in case saving is interrupted |
 | `PASTE98.LOG` | Written each time the program runs; look here if something goes wrong |
+| `UNINST.EXE` | Removes the program (installer only) |
 
 ## Setting up
+
+Install Java 5 first (the 1.5.0_22 runtime is the last update for Windows 98).
+
+### With the installer
+
+1. Run `gw_paste98-VERSION-setup.exe`. It finds Java 5 through the registry
+   and installs to `C:\Program Files\gw_paste98`, with a **gw_paste98** folder
+   in the Start Menu. Tick **Start with Windows** if you want it to start
+   with Windows (it is off unless an earlier install had it on).
+2. Start it from the last page of setup or from the Start Menu. A clipboard
+   icon appears in the notification area, and the Settings window opens.
+3. Enter the server's key pin (next section) and press OK.
+
+To upgrade, exit the program and run the new setup; your settings in
+`PASTE98.PRF` are kept. The shortcuts point at the Java found during setup,
+so run setup again if you move or replace Java. To remove the program, use
+**Add/Remove Programs** or **Uninstall gw_paste98** in the Start Menu; it asks
+whether to keep your settings and key pins.
+
+The installer writes its own `SENDFILE.BAT` with full paths, so it works from
+any folder. `PASTE98.BAT` is only in the zip.
+
+### From the zip
 
 1. Copy the `gw_paste98` folder anywhere, for example `C:\GW_PASTE98`.
 2. Run `PASTE98.BAT`. A clipboard icon appears in the notification area, and
@@ -30,7 +54,8 @@ and certificate list are not used at all.
 
 **Upgrading from 0.1.x:** copy the new files over the old ones. On first start,
 the program copies your settings from `PASTE98.CFG` and `PASTE98.USR`, renames
-`PASTE98.CFG` to `PASTE98.OLD` and deletes `PASTE98.USR`.
+`PASTE98.CFG` to `PASTE98.OLD` and deletes `PASTE98.USR`. (To move to the
+installer instead, copy `PASTE98.PRF` into the installed folder.)
 
 To start it with Windows, make a shortcut in
 `C:\WINDOWS\Start Menu\Programs\StartUp` with the target

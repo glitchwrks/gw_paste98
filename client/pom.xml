@@ -14,6 +14,11 @@
   <name>gw_paste98 client</name>
   <description>Swing tray application for Windows 98 / Java 5</description>
 
+  <properties>
+    <!-- NSIS compiler for the installer; override with -Dmakensis=/path/to/makensis -->
+    <makensis>makensis</makensis>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.glitchwrks.paste98</groupId>
@@ -93,6 +98,67 @@
                   <sysproperty key="jdk8.home" value="${java.home}/.."/>
                   <arg value="@${project.basedir}/src/proguard/shrink.pro"/>
                 </java>
+              </target>
+            </configuration>
+          </execution>
+
+          <!--
+            target/gw_paste98-VERSION-setup.exe, an NSIS installer (src/installer).
+            Needs makensis (NSIS 3) on the PATH, or -Dmakensis=/path/to/makensis;
+            without it the build warns and makes only the zip. The jar goes in
+            uncompressed so the installer's solid LZMA compresses it as a whole,
+            which halves the download.
+          -->
+          <execution>
+            <id>installer</id>
+            <phase>package</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target xmlns:if="ant:if" xmlns:unless="ant:unless">
+                <condition property="nsis.found">
+                  <or>
+                    <available file="${makensis}"/>
+                    <available file="${makensis}" filepath="${env.PATH}"/>
+                  </or>
+                </condition>
+                <echo level="warning" unless:set="nsis.found"
+                      message="makensis (NSIS 3) not found: skipping the installer. Install NSIS or pass -Dmakensis=/path/to/makensis."/>
+
+                <sequential if:set="nsis.found">
+                  <!-- The version shown by the installer comes from Version.java. -->
+                  <loadfile property="app.version" srcfile="${project.basedir}/src/main/java/com/glitchwrks/paste98/client/Version.java">
+                    <filterchain>
+                      <linecontainsregexp>
+                        <regexp pattern="String VERSION = &quot;"/>
+                      </linecontainsregexp>
+                      <replaceregex pattern=".*VERSION = &quot;([0-9.]+)&quot;.*" replace="\1"/>
+                      <striplinebreaks/>
+                    </filterchain>
+                  </loadfile>
+
+                  <property name="stage" value="${project.build.directory}/installer/stage"/>
+                  <delete dir="${project.build.directory}/installer"/>
+                  <mkdir dir="${project.build.directory}/installer/jar"/>
+                  <unzip src="${project.build.directory}/GWPASTE.JAR" dest="${project.build.directory}/installer/jar"/>
+                  <jar destfile="${stage}/GWPASTE.JAR" compress="false" zip64Mode="never"
+                       manifest="${project.build.directory}/installer/jar/META-INF/MANIFEST.MF">
+                    <fileset dir="${project.build.directory}/installer/jar" excludes="META-INF/MANIFEST.MF"/>
+                  </jar>
+                  <copy file="${project.basedir}/../native/prebuilt/gwtray.dll" tofile="${stage}/GWTRAY.DLL"/>
+                  <copy file="${project.basedir}/../native/prebuilt/gwtray.ico" tofile="${stage}/GWTRAY.ICO"/>
+                  <copy file="${project.basedir}/README.md" tofile="${stage}/README.TXT"/>
+                  <copy file="${project.basedir}/../LICENSE" tofile="${stage}/LICENSE.TXT"/>
+                  <fixcrlf srcdir="${stage}" includes="*.TXT" eol="crlf"/>
+
+                  <exec executable="${makensis}" failonerror="true">
+                    <arg value="-V2"/>
+                    <arg value="-WX"/> <!-- warnings are errors -->
+                    <arg value="-DVERSION=${app.version}"/>
+                    <arg value="-DSTAGE=${stage}"/>
+                    <arg value="-DOUTFILE=${project.build.directory}/gw_paste98-${app.version}-setup.exe"/>
+                    <arg value="${project.basedir}/src/installer/gw_paste98.nsi"/>
+                  </exec>
+                </sequential>
               </target>
             </configuration>
           </execution>
