@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.glitchwrks.paste98.client.ui.Appearance;
 import com.glitchwrks.paste98.tls.TlsOptions;
 
 /**
@@ -35,9 +36,10 @@ public final class Settings {
     public static final String CONNECTION = "Connection";
     public static final String PASTES = "Pastes";
     public static final String ACCOUNT = "Account";
+    public static final String APPEARANCE = "Appearance";
 
     /** Dialog tab order. */
-    public static final String[] SECTIONS = { SERVER, CONNECTION, PASTES, ACCOUNT };
+    public static final String[] SECTIONS = { SERVER, CONNECTION, PASTES, ACCOUNT, APPEARANCE };
 
     // ---- Server --------------------------------------------------------------
 
@@ -91,6 +93,16 @@ public final class Settings {
             "Filled in when you log in. Leave empty to be asked each time. The password is never stored.", "",
             false, 64);
 
+    // ---- Appearance ----------------------------------------------------------------
+
+    public static final Setting.Choice LOOK = new Setting.Choice("ui.lookAndFeel", APPEARANCE, "Look and feel",
+            "Classic Metal is the Swing look of Java 1.2 to 1.4. Windows matches the system's controls, but Java "
+                    + "cannot draw Windows 98's MS Sans Serif, so text uses Microsoft Sans Serif or Tahoma if "
+                    + "installed, otherwise Arial. Changes apply as soon as you press OK.",
+            Appearance.METAL_STEEL,
+            new String[] { Appearance.METAL_STEEL, Appearance.METAL_OCEAN, Appearance.WINDOWS },
+            new String[] { "Java Metal, classic (Steel)", "Java Metal, Ocean (Java 5 default)", "Windows" });
+
     private static final List<Setting<?>> ALL;
 
     static {
@@ -106,6 +118,7 @@ public final class Settings {
         l.add(COPY_URL);
         l.add(SHOW_RESULT);
         l.add(USERNAME);
+        l.add(LOOK);
         ALL = Collections.unmodifiableList(l);
     }
 

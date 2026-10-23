@@ -114,8 +114,19 @@ it, pastes take about half a second.
 | | Copy the new paste's address to the clipboard | on |
 | | Show the new paste's address in a window | on |
 | Account | Remembered username | none |
+| Appearance | Look and feel | Java Metal, classic (Steel) |
 
-Changes take effect on the next paste; no restart is needed. Changing the host
+Changes take effect on the next paste; no restart is needed.
+
+**Appearance.** The program looks like a Java program by default, using
+Swing's classic Metal look from Java 1.2 to 1.4. "Java Metal, Ocean" is the
+look Java 5 introduced. "Windows" uses the system's look, but not quite its
+text: Windows 98 draws dialogs in MS Sans Serif, a bitmap font, and Java can
+only draw outline fonts. With "Windows" chosen, the program uses Microsoft
+Sans Serif (an outline version of MS Sans Serif, which comes with Windows
+2000 and later and some applications) or Tahoma if either is installed, and
+otherwise Java's default, Arial. Status shows which font is in use. The tray
+menu is drawn by Windows in every case. Changing the host
 or port logs you out, so your password is never sent to a different server.
 
 Settings are saved in `PASTE98.PRF` in the program's folder, not in the

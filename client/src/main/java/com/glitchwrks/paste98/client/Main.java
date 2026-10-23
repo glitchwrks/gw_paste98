@@ -18,14 +18,15 @@ import java.security.SecureRandom;
 import java.util.prefs.Preferences;
 
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 import com.glitchwrks.paste98.api.PasteClient;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
 import com.glitchwrks.paste98.api.PinnedTransport;
 import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
+import com.glitchwrks.paste98.client.ui.Appearance;
 import com.glitchwrks.paste98.client.settings.Values;
 
 /**
@@ -88,14 +89,9 @@ public final class Main {
                 + " (" + System.getProperty("java.vm.name") + ") on " + System.getProperty("os.name") + " "
                 + System.getProperty("os.version") + "; folder " + AppDir.get());
 
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            Log.info("using the default look and feel: " + e);
-        }
-
         SettingsStore settings = openSettings();
         String imported = settings.importLegacy(AppDir.get());
+        Appearance.apply(settings.current().get(Settings.LOOK));
 
         PasteService service = new PasteService(settings);
         service.warmUp(); // starts the slow first handshake immediately, in the background

@@ -31,6 +31,10 @@ service, with an LLM doing much of the work.
   cannot be used, the client falls back to a small Swing window.
 - **Warm-up.** The tray client does one throwaway handshake in the background
   at launch, so the slow first handshake happens while you are typing.
+- **Looks like Java on purpose.** The default is Swing's classic Metal look.
+  Java cannot draw Windows 98's bitmap UI font (MS Sans Serif), so the Windows
+  look always shows slightly different text; it is available as a setting,
+  substituting Microsoft Sans Serif or Tahoma when installed.
 - **Settings without the registry.** Settings use the standard
   `java.util.prefs` API, the period-correct choice for Java on Windows, but
   with a small file backend (`client/.../prefs`) installed in place of Java's

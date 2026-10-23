@@ -26,6 +26,7 @@ import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.settings.Values;
 import com.glitchwrks.paste98.client.tray.NativeTray;
+import com.glitchwrks.paste98.client.ui.Appearance;
 import com.glitchwrks.paste98.client.ui.ComposeWindow;
 import com.glitchwrks.paste98.client.ui.Dialogs;
 import com.glitchwrks.paste98.client.ui.FallbackWindow;
@@ -312,6 +313,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
             sb.append("Last paste: ").append(service.getLastUrl()).append('\n');
         }
         sb.append("Tray icon: ").append(trayActive ? "yes" : "no (see PASTE98.LOG)").append('\n');
+        sb.append("Appearance: ").append(Appearance.describe()).append('\n');
         sb.append("Settings file: ").append(FilePreferencesFactory.userFile()).append('\n');
         sb.append("Folder: ").append(AppDir.get());
         Dialogs.info(parent(), "Status", sb.toString());
@@ -340,6 +342,9 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
 
     public void settingsChanged(Values before, Values after) {
         service.settingsChanged(before, after);
+        if (!before.get(Settings.LOOK).equals(after.get(Settings.LOOK))) {
+            Appearance.apply(after.get(Settings.LOOK));
+        }
     }
 
     // ---- status --------------------------------------------------------------
