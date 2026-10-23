@@ -31,6 +31,11 @@ service, with an LLM doing much of the work.
   cannot be used, the client falls back to a small Swing window.
 - **Warm-up.** The tray client does one throwaway handshake in the background
   at launch, so the slow first handshake happens while you are typing.
+- **Settings without the registry.** Settings use the standard
+  `java.util.prefs` API, the period-correct choice for Java on Windows, but
+  with a small file backend (`client/.../prefs`) installed in place of Java's
+  default Windows backend, which writes to the registry. Everything is stored
+  in `PASTE98.PRF` in the program folder.
 
 ## Layout
 
@@ -41,6 +46,21 @@ service, with an LLM doing much of the work.
 | `bench/` | `pastebench`, the TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
 | `tools/` | `fake_pastes_server.py`, a local stand-in for the pastes service, for testing |
+
+## Adding a setting
+
+Every setting is declared once in `client/.../settings/Settings.java`, with
+its key, Settings tab, label, help text, type, default and validation:
+
+    public static final Setting.Int TIMEOUT = new Setting.Int("net.timeout", CONNECTION, "Timeout",
+            "How long to wait for the server before giving up.", 30, 5, 300, "seconds");
+
+Add it to the list in the same file, then read it where it is used with
+`settings.current().getInt(Settings.TIMEOUT)`. The Settings dialog, saving,
+validation of stored values and XML import pick it up automatically. Types
+are `Text`, `Host`, `Int`, `Flag` (checkbox), `Choice` (drop-down) and `Pins`.
+If a later version changes the meaning of a stored value, bump
+`Settings.CURRENT_VERSION` and migrate in `SettingsStore`.
 
 ## Building
 
@@ -68,15 +88,19 @@ or has wrong JNI export names or stdcall argument sizes.
 ## Testing
 
 - `mvn package` runs the unit tests (API client logic against canned
-  responses, HTTP parsing, JSON encoding, settings).
+  responses, HTTP parsing, JSON encoding, the preferences file backend, and
+  settings validation, migration and XML import). Client tests use a scratch
+  settings file, never the real one.
 - `tools/fake_pastes_server.py` mimics the real service's responses (Basic Auth,
   JSON schema check, name uniqueness, latin1 storage) over TLS, so the client
   can be exercised end to end without touching production:
 
       python3 tools/fake_pastes_server.py --cert cert.pem --key key.pem --port 9443
 
-  Point `PASTE98.CFG` at `localhost:9443` with the test key's pin, then use the
-  tray client or `SENDFILE.BAT`.
+  In the client's Settings, set the host to `localhost`, the port to `9443` and
+  the pin to the test key's pin, then use the tray client or `SENDFILE.BAT`.
+  To keep test settings apart from real ones, start the client with
+  `-Dpaste98.prefs.user=C:\TEST\PASTE98.PRF`.
 
 ## Status
 

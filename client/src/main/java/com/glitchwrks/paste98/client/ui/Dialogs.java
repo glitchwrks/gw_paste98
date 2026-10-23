@@ -50,7 +50,8 @@ public final class Dialogs {
     }
 
     /** Asks for the API username and password; null if cancelled. */
-    public static Credentials askCredentials(Component parent, String host, String defaultUser, String reason) {
+    public static Credentials askCredentials(Component parent, String host, String defaultUser, boolean remembered,
+            String reason) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(2, 2, 2, 2);
@@ -77,7 +78,7 @@ public final class Dialogs {
 
         c.gridx = 1;
         c.gridy = 3;
-        JCheckBox remember = new JCheckBox("Remember username", defaultUser != null);
+        JCheckBox remember = new JCheckBox("Remember username", remembered);
         p.add(remember, c);
 
         c.gridx = 0;
@@ -119,16 +120,17 @@ public final class Dialogs {
         f.setText("");
     }
 
-    /** Shows the new paste's URL, selectable, and says it is on the clipboard. */
-    public static void showResult(Component parent, String url, boolean copied) {
+    /** Shows the new paste's URL, selectable, with a note (e.g. that it is on the clipboard). */
+    public static void showResult(Component parent, String url, String note) {
         JPanel p = new JPanel(new BorderLayout(4, 4));
         p.add(new JLabel("Paste created:"), BorderLayout.NORTH);
         JTextField f = new JTextField(url, 36);
         f.setEditable(false);
         f.selectAll();
         p.add(f, BorderLayout.CENTER);
-        p.add(new JLabel(copied ? "The address has been copied to the clipboard."
-                : "Could not copy the address to the clipboard."), BorderLayout.SOUTH);
+        if (note.length() > 0) {
+            p.add(new JLabel(note), BorderLayout.SOUTH);
+        }
         JOptionPane.showMessageDialog(parent, p, TITLE, JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -147,7 +149,7 @@ public final class Dialogs {
         String extra = "";
         if (e.getKind() == PasteException.Kind.PIN) {
             extra = "\n\nThis could mean the server's key changed, or that something is intercepting the "
-                    + "connection. If the server was rebuilt with a new key, update the pins in PASTE98.CFG.";
+                    + "connection. If the server was rebuilt with a new key, update the key pins in Settings.";
         } else if (e.getKind() == PasteException.Kind.AUTH) {
             extra = "\n\nYou will be asked to log in again.";
         }

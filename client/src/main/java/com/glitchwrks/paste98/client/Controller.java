@@ -21,26 +21,36 @@ import java.net.URL;
 import com.glitchwrks.paste98.api.ContentCheck;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
+import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.client.settings.Settings;
+import com.glitchwrks.paste98.client.settings.SettingsStore;
+import com.glitchwrks.paste98.client.settings.Values;
 import com.glitchwrks.paste98.client.tray.NativeTray;
 import com.glitchwrks.paste98.client.ui.ComposeWindow;
 import com.glitchwrks.paste98.client.ui.Dialogs;
 import com.glitchwrks.paste98.client.ui.FallbackWindow;
+import com.glitchwrks.paste98.client.ui.SettingsDialog;
 
 /**
  * Wires the tray (or fallback window), the compose window, the dialogs and
  * the paste service together. Everything here runs on the Swing event thread
  * except {@link #startTray()}.
  */
-public final class Controller implements NativeTray.Listener, ComposeWindow.Actions, PasteService.StatusListener {
+public final class Controller implements NativeTray.Listener, ComposeWindow.Actions, PasteService.StatusListener,
+        SettingsStore.Listener {
 
-    static final String[] MENU = { "New paste...", "Paste clipboard", "-", "Status...", "About...", "-", "Exit" };
+    static final String[] MENU = { "New paste...", "Paste clipboard", "-", "Status...", "Settings...", "About...", "-",
+        "Exit" };
     static final int ITEM_NEW = 0;
     static final int ITEM_CLIPBOARD = 1;
     static final int ITEM_STATUS = 3;
-    static final int ITEM_ABOUT = 4;
-    static final int ITEM_EXIT = 6;
+    static final int ITEM_SETTINGS = 4;
+    static final int ITEM_ABOUT = 5;
+    static final int ITEM_EXIT = 7;
 
     private final PasteService service;
+    private final SettingsStore settings;
+    private String legacyImport;
     private final Image icon;
     private ComposeWindow compose;
     private FallbackWindow fallback;
@@ -49,6 +59,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
 
     public Controller(PasteService service) {
         this.service = service;
+        this.settings = service.getSettings();
         URL png = Controller.class.getResource("gwtray.png");
         this.icon = png == null ? null : Toolkit.getDefaultToolkit().createImage(png);
     }
@@ -69,13 +80,33 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         return why;
     }
 
-    /** Finishes start-up on the event thread; shows the fallback window if there is no tray. */
+    /** Records that settings were imported from the old PASTE98.CFG, to mention on start-up. */
+    public void setLegacyImport(String description) {
+        legacyImport = description;
+    }
+
+    /**
+     * Finishes start-up on the event thread: shows the fallback window if
+     * there is no tray, then opens Settings if the program is not set up yet.
+     */
     public void startUi(String whyNoTray) {
         service.setStatusListener(this);
+        settings.addListener(this);
         if (!trayActive) {
             showFallback(whyNoTray);
         }
         statusChanged(service.getShortStatus(), service.getDetail());
+        SettingsDialog.showLoadProblems(parent(), settings.getLoadProblems());
+        if (legacyImport != null) {
+            Dialogs.info(parent(), "Settings", "Your settings were copied from " + SettingsStore.LEGACY_SETTINGS
+                    + " into " + FilePreferencesFactory.USER_FILE + ". " + SettingsStore.LEGACY_SETTINGS
+                    + " has been renamed to " + SettingsStore.LEGACY_RENAMED
+                    + " and is no longer used: change settings with Settings... in the menu.");
+        }
+        if (!settings.current().isConfigured()) {
+            SettingsDialog.show(parent(), settings, "Welcome to " + Version.NAME
+                    + ". Enter the server's key pin to start sending pastes.", Settings.SERVER);
+        }
     }
 
     private void showFallback(String whyNoTray) {
@@ -115,6 +146,9 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         case ITEM_STATUS:
             showStatus();
             break;
+        case ITEM_SETTINGS:
+            SettingsDialog.show(parent(), settings, null, null);
+            break;
         case ITEM_ABOUT:
             showAbout();
             break;
@@ -149,9 +183,8 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
             Dialogs.info(parent(), "Paste clipboard", "The clipboard does not contain any text.");
             return;
         }
-        String preview = preview(text);
-        if (!Dialogs.confirm(parent(), "Send the clipboard (" + text.length() + " characters) as a new paste?\n\n"
-                + preview)) {
+        if (settings.current().is(Settings.CONFIRM_CLIPBOARD) && !Dialogs.confirm(parent(), "Send the clipboard ("
+                + text.length() + " characters) as a new paste?\n\n" + preview(text))) {
             return;
         }
         sendText(text, null);
@@ -180,6 +213,13 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
             Dialogs.info(parent, "Busy", "A paste is already being sent.");
             return;
         }
+        if (!settings.current().isConfigured()
+                && !SettingsDialog.show(parent, settings, "Enter the server's key pin before sending.", Settings.SERVER)) {
+            return;
+        }
+        if (!settings.current().isConfigured()) {
+            return;
+        }
         ContentCheck check = ContentCheck.of(text);
         if (check.isEmpty()) {
             Dialogs.info(parent, "Nothing to send", "The paste is empty.");
@@ -205,13 +245,22 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         service.send(text, new PasteService.Callback() {
             public void succeeded(PasteResult result) {
                 sending = false;
-                boolean copied = copyToClipboard(result.getUrl());
+                Values v = settings.current();
+                String note;
+                if (v.is(Settings.COPY_URL)) {
+                    note = copyToClipboard(result.getUrl()) ? "The address has been copied to the clipboard."
+                            : "Could not copy the address to the clipboard.";
+                } else {
+                    note = "";
+                }
                 if (window != null) {
                     window.setText("");
                     window.setBusy(false, null);
                     window.hide();
                 }
-                Dialogs.showResult(parent(), result.getUrl(), copied);
+                if (v.is(Settings.SHOW_RESULT)) {
+                    Dialogs.showResult(parent(), result.getUrl(), note);
+                }
             }
 
             public void failed(PasteException e) {
@@ -228,32 +277,41 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         if (service.hasCredentials()) {
             return true;
         }
-        Config config = service.getConfig();
-        Dialogs.Credentials c = Dialogs.askCredentials(parent, config.getTlsOptions().getHost(), config.getUsername(),
-                reason);
+        Values v = settings.current();
+        String remembered = v.rememberedUsername();
+        String last = service.getUsername();
+        Dialogs.Credentials c = Dialogs.askCredentials(parent, v.get(Settings.HOST),
+                last != null ? last : remembered, remembered != null, reason);
         if (c == null) {
             return false;
         }
-        config.setUsername(c.username, c.rememberUsername);
-        service.setPassword(c.password);
+        service.setCredentials(c.username, c.password);
+        String want = c.rememberUsername ? c.username : null;
+        if (want == null ? remembered != null : !want.equals(remembered)) {
+            try {
+                settings.rememberUsername(want);
+            } catch (java.util.prefs.BackingStoreException e) {
+                Log.info("cannot save the username: " + e.getMessage());
+            }
+        }
         return true;
     }
 
     // ---- other actions -------------------------------------------------------
 
     private void showStatus() {
-        Config config = service.getConfig();
+        Values v = settings.current();
         StringBuilder sb = new StringBuilder();
         sb.append(service.getDetail()).append("\n\n");
-        sb.append("Server: ").append(config.getTlsOptions().getHost()).append(':')
-                .append(config.getTlsOptions().getPort()).append('\n');
-        sb.append("Pinned keys: ").append(config.getTlsOptions().getPins().size()).append('\n');
-        sb.append("Logged in as: ").append(service.hasCredentials() ? config.getUsername() : "(not logged in)")
+        sb.append("Server: ").append(v.get(Settings.HOST)).append(':').append(v.getInt(Settings.PORT)).append('\n');
+        sb.append("Pinned keys: ").append(v.get(Settings.PINS).size()).append('\n');
+        sb.append("Logged in as: ").append(service.hasCredentials() ? service.getUsername() : "(not logged in)")
                 .append('\n');
         if (service.getLastUrl() != null) {
             sb.append("Last paste: ").append(service.getLastUrl()).append('\n');
         }
         sb.append("Tray icon: ").append(trayActive ? "yes" : "no (see PASTE98.LOG)").append('\n');
+        sb.append("Settings file: ").append(FilePreferencesFactory.userFile()).append('\n');
         sb.append("Folder: ").append(AppDir.get());
         Dialogs.info(parent(), "Status", sb.toString());
     }
@@ -275,6 +333,12 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
             NativeTray.stop();
         }
         System.exit(0);
+    }
+
+    // ---- settings ------------------------------------------------------------
+
+    public void settingsChanged(Values before, Values after) {
+        service.settingsChanged(before, after);
     }
 
     // ---- status --------------------------------------------------------------

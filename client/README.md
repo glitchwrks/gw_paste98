@@ -15,18 +15,22 @@ and certificate list are not used at all.
 | `GWPASTE.JAR` | The program |
 | `GWTRAY.DLL` | Lets Java 5 show a tray icon (Java 5 has no tray support of its own) |
 | `GWTRAY.ICO` | The tray icon |
-| `PASTE98.CFG` | Settings: server and key pin. Edit this before first use. |
 | `PASTE98.BAT` | Starts the program |
 | `SENDFILE.BAT` | Sends a text file from the command line |
+| `PASTE98.PRF` | Settings, written by the program (created when you first save settings) |
+| `PASTE98.BAK` | The previous `PASTE98.PRF`, kept in case saving is interrupted |
 | `PASTE98.LOG` | Written each time the program runs; look here if something goes wrong |
-| `PASTE98.USR` | Your remembered username, if you ticked "Remember username" |
 
 ## Setting up
 
 1. Copy the `gw_paste98` folder anywhere, for example `C:\GW_PASTE98`.
-2. Edit `PASTE98.CFG` with Notepad and replace `REPLACE_WITH_LIVE_KEY_PIN`
-   with the server's key pin (next section).
-3. Run `PASTE98.BAT`. A clipboard icon appears in the notification area.
+2. Run `PASTE98.BAT`. A clipboard icon appears in the notification area, and
+   the Settings window opens.
+3. Enter the server's key pin (next section) and press OK.
+
+**Upgrading from 0.1.x:** copy the new files over the old ones. On first start,
+the program copies your settings from `PASTE98.CFG` and `PASTE98.USR`, renames
+`PASTE98.CFG` to `PASTE98.OLD` and deletes `PASTE98.USR`.
 
 To start it with Windows, make a shortcut in
 `C:\WINDOWS\Start Menu\Programs\StartUp` with the target
@@ -37,8 +41,8 @@ adjusting both paths to where Java 5 and the program actually are.
 
 ## The key pin
 
-The program trusts the server only if its public key matches the pin in
-`PASTE98.CFG`: the base64 SHA-256 hash of the key. It does not use any
+The program trusts the server only if its public key matches a key pin in
+Settings: the base64 SHA-256 hash of the key. It does not use any
 certificate authority, so Let's Encrypt renewals do not matter as long as the
 server keeps the same key.
 
@@ -47,8 +51,8 @@ On the server (OpenBSD / LibreSSL), from the key relayd uses:
     openssl pkey -in /etc/ssl/private/pastes.glitchwrks.com.key -pubout -outform der \
       | openssl dgst -sha256 -binary | openssl base64
 
-Put a second pin after the first, separated by a space, for a backup key that
-the server can be switched to without updating every client.
+Put a second pin on its own line for a backup key that the server can be
+switched to without updating every client.
 
 ## Using it
 
@@ -60,17 +64,49 @@ Right-click the tray icon for the menu; double-click it to open a new paste.
   confirm.
 - **Status...** shows whether the server is reachable, the encryption in use
   and the last paste's address.
+- **Settings...** changes the settings (next section).
 - **Exit** removes the icon and quits.
 
 The first time you send, it asks for your pastes username and password. The
 password is kept in memory only, until you exit; it is never written to disk.
 
 When a paste is created, its address (for example
-`https://pastes.glitchwrks.com/k3x9q2ab`) is copied to the clipboard.
+`https://pastes.glitchwrks.com/k3x9q2ab`) is copied to the clipboard and shown
+in a window; either can be turned off in Settings.
 
 At start-up the program connects to the server once in the background. That
 first connection takes a couple of seconds on a Pentium-class machine; after
 it, pastes take about half a second.
+
+## Settings
+
+| Tab | Setting | Default |
+|---|---|---|
+| Server | Host | `pastes.glitchwrks.com` |
+| | Port | 443 |
+| | Key pins | none: required |
+| Connection | Cipher | Automatic (ChaCha20 preferred) |
+| | Key exchange | Automatic (X25519 preferred) |
+| | Timeout | 30 seconds |
+| | Connect at start-up to warm up | on |
+| Pastes | Ask before sending the clipboard | on |
+| | Copy the new paste's address to the clipboard | on |
+| | Show the new paste's address in a window | on |
+| Account | Remembered username | none |
+
+Changes take effect on the next paste; no restart is needed. Changing the host
+or port logs you out, so your password is never sent to a different server.
+
+Settings are saved in `PASTE98.PRF` in the program's folder, not in the
+Windows registry. **Export...** saves them to an XML file (Java's standard
+preferences format) and **Import...** reads one back into the Settings window
+for you to review before pressing OK; this is the way to copy settings to
+another machine. Exported files contain the server, pins and username, never
+the password.
+
+`PASTE98.PRF` is plain text, but edit settings in the Settings window: it
+checks every value, while a hand-edited mistake is ignored (with a note in
+`PASTE98.LOG`) and the default used instead.
 
 ## Limits
 
@@ -82,9 +118,10 @@ it, pastes take about half a second.
 
     SENDFILE filename
 
-sends a text file and prints the paste's address. The password comes from the
-`PASTE98_PASSWORD` environment variable and the username from `PASTE98.USR`
-(or add `--user NAME`). For example:
+sends a text file and prints the paste's address, using the settings saved by
+the tray program. The password comes from the `PASTE98_PASSWORD` environment
+variable and the username from the remembered username (or add `--user NAME`).
+For example:
 
     SET PASTE98_PASSWORD=yourpassword
     SENDFILE AUTOEXEC.BAT

@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.security.SecureRandom;
+import java.util.prefs.Preferences;
 
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -24,6 +24,9 @@ import com.glitchwrks.paste98.api.PasteClient;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
 import com.glitchwrks.paste98.api.PinnedTransport;
+import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.client.settings.SettingsStore;
+import com.glitchwrks.paste98.client.settings.Values;
 
 /**
  * Entry point.
@@ -41,6 +44,10 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+        // First, before anything uses java.util.prefs: store settings in a
+        // file in the program folder rather than in the Windows registry.
+        FilePreferencesFactory.install();
+
         boolean tray = true;
         String sendFile = null;
         String user = null;
@@ -87,21 +94,14 @@ public final class Main {
             Log.info("using the default look and feel: " + e);
         }
 
-        final Config config;
-        try {
-            config = Config.load(AppDir.get());
-        } catch (Config.ConfigException e) {
-            Log.info("settings problem: " + e.getMessage());
-            JOptionPane.showMessageDialog(null, e.getMessage(), Version.NAME + " - settings problem",
-                    JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-            return;
-        }
+        SettingsStore settings = openSettings();
+        String imported = settings.importLegacy(AppDir.get());
 
-        PasteService service = new PasteService(config);
+        PasteService service = new PasteService(settings);
         service.warmUp(); // starts the slow first handshake immediately, in the background
 
         final Controller controller = new Controller(service);
+        controller.setLegacyImport(imported);
         final String whyNoTray = controller.startTray(wantTray);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -112,18 +112,18 @@ public final class Main {
 
     /** Headless paste for scripts and testing. Returns the exit status. */
     static int sendFromCommandLine(String path, String userOverride) {
-        Config config;
-        try {
-            config = Config.load(AppDir.get());
-        } catch (Config.ConfigException e) {
-            System.err.println("settings problem: " + e.getMessage());
+        SettingsStore settings = openSettings();
+        settings.importLegacy(AppDir.get());
+        Values v = settings.current();
+        if (!v.isConfigured()) {
+            System.err.println("not set up: start " + Version.NAME + " and enter the server's key pin in Settings");
             return 1;
         }
-        String user = userOverride != null ? userOverride : config.getUsername();
+        String user = userOverride != null ? userOverride : v.rememberedUsername();
         String pw = System.getenv("PASTE98_PASSWORD");
         if (user == null || pw == null) {
-            System.err.println("need a username (--user, or remembered in " + Config.USER_FILE
-                    + ") and the PASTE98_PASSWORD environment variable");
+            System.err.println("need a username (--user, or remembered in Settings) and the PASTE98_PASSWORD "
+                    + "environment variable");
             return 1;
         }
         String content;
@@ -135,7 +135,7 @@ public final class Main {
         }
         long t0 = System.currentTimeMillis();
         try {
-            PasteClient client = new PasteClient(new PinnedTransport(config.getTlsOptions()), new SecureRandom(),
+            PasteClient client = new PasteClient(new PinnedTransport(v.tlsOptions()), new SecureRandom(),
                     Version.userAgent());
             PasteResult r = client.send(content, user, pw.toCharArray());
             System.out.println(r.getUrl());
@@ -146,6 +146,14 @@ public final class Main {
             System.err.println("paste failed (" + e.getKind() + "): " + e.getMessage());
             return 2;
         }
+    }
+
+    /** The settings, from java.util.prefs (normally the PASTE98.PRF file; see FilePreferencesFactory). */
+    private static SettingsStore openSettings() {
+        Preferences root = Preferences.userRoot();
+        Log.info("settings backend: " + root.getClass().getName()
+                + (FilePreferencesFactory.isActive() ? " (" + FilePreferencesFactory.userFile() + ")" : ""));
+        return new SettingsStore(root);
     }
 
     /** Reads a text file in the platform's default encoding (cp1252 on an English Windows 98). */

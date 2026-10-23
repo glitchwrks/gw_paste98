@@ -40,6 +40,22 @@
     </resources>
 
     <plugins>
+      <!--
+        Tests use the file-backed java.util.prefs backend with a scratch file,
+        so they never touch a developer's real settings (or the registry).
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <java.util.prefs.PreferencesFactory>com.glitchwrks.paste98.client.prefs.FilePreferencesFactory</java.util.prefs.PreferencesFactory>
+            <paste98.prefs.user>${project.build.directory}/test-prefs/PASTE98.PRF</paste98.prefs.user>
+            <paste98.prefs.system>${project.build.directory}/test-prefs/PASTE98S.PRF</paste98.prefs.system>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>

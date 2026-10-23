@@ -35,5 +35,13 @@
     static void onEvent(int);
 }
 
+# java.util.prefs creates the settings backend by reflection from the class
+# name in the java.util.prefs.PreferencesFactory property (see Main).
+-keep public class com.glitchwrks.paste98.client.prefs.FilePreferencesFactory {
+    public <init>();
+    public java.util.prefs.Preferences userRoot();
+    public java.util.prefs.Preferences systemRoot();
+}
+
 -printusage <target.dir>/proguard-removed.txt
 -dontnote
