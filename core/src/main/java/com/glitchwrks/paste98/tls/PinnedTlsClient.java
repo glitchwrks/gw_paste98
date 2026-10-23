@@ -62,6 +62,9 @@ public final class PinnedTlsClient extends DefaultTlsClient {
 
     private String observedPin;
     private String observedCert;
+    private boolean captureOnly;
+    private byte[] capturedLeaf;
+    private int capturedChainLength;
 
     /**
      * @param enforcePins true for every real connection; false only to display
@@ -73,6 +76,28 @@ public final class PinnedTlsClient extends DefaultTlsClient {
         this.options = options;
         this.enforcePins = enforcePins;
         this.sessionToResume = sessionToResume;
+    }
+
+    /**
+     * Stop the handshake as soon as the server's certificate arrives, keeping
+     * a copy of it. Used only to show a person the server's key; requires
+     * enforcePins false. Nothing past the certificate is processed: no key
+     * exchange, no signature check, and no data can be sent.
+     */
+    void setCaptureOnly(boolean captureOnly) {
+        if (captureOnly && enforcePins) {
+            throw new IllegalStateException("capture-only mode cannot enforce pins");
+        }
+        this.captureOnly = captureOnly;
+    }
+
+    /** The leaf certificate captured in capture-only mode, or null. */
+    byte[] getCapturedLeaf() {
+        return capturedLeaf;
+    }
+
+    int getCapturedChainLength() {
+        return capturedChainLength;
     }
 
     public void setListener(HandshakeListener listener) {
@@ -207,6 +232,12 @@ public final class PinnedTlsClient extends DefaultTlsClient {
                 byte[] leaf = chain.getCertificateAt(0).getEncoded();
                 observedPin = SpkiPin.fromCertificate(leaf);
                 observedCert = SpkiPin.describe(leaf);
+                if (captureOnly) {
+                    capturedLeaf = leaf;
+                    capturedChainLength = chain.getLength();
+                    // Deliberately end the handshake here: we only wanted the certificate.
+                    throw new TlsFatalAlert(AlertDescription.user_canceled);
+                }
                 if (enforcePins && !options.getPins().contains(observedPin)) {
                     throw new TlsFatalAlert(AlertDescription.bad_certificate);
                 }

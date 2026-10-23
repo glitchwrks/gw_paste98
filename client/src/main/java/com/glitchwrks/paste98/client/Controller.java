@@ -105,7 +105,8 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         }
         if (!settings.current().isConfigured()) {
             SettingsDialog.show(parent(), settings, "Welcome to " + Version.NAME
-                    + ". Enter the server's key pin to start sending pastes.", Settings.SERVER);
+                    + ". Enter the server's key pin, or get it from the server and check it, to start.",
+                    Settings.SERVER);
         }
     }
 

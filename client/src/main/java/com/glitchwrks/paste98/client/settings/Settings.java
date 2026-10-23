@@ -49,7 +49,8 @@ public final class Settings {
 
     public static final Setting.Pins PINS = new Setting.Pins("server.pins", SERVER, "Key pins",
             "One per line: the base64 SHA-256 hash of the server's public key. The program only talks to a "
-                    + "server holding one of these keys. Add a backup key's pin as a second line.");
+                    + "server holding one of these keys. Add a backup key's pin as a second line. \"Get pin from "
+                    + "server\" reads it from the server, but you must check it against a trusted source.");
 
     // ---- Connection ------------------------------------------------------------
 

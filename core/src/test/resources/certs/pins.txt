@@ -1,0 +1,4 @@
+ec-cn-only.der A4MIEbVmOSFqfco0ky5lmdqMV045kZkIGbnFMcY8Pj0=
+ed25519.der P0hz24LBmpD7x7TCtbcaSeHulbsBQ1AitrDKxkNEgY0=
+rsa-san.der EkjvM7CUm/9xPZxFUQXqyyLoeifI4EUtoW40Fd4zgOI=
+test-server.p12 L5mi38+k+h1RihrJAKZ4JtdFcphbPuv7XLGddceD+jA=

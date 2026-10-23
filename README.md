@@ -37,6 +37,37 @@ service, with an LLM doing much of the work.
   default Windows backend, which writes to the registry. Everything is stored
   in `PASTE98.PRF` in the program folder.
 
+## Getting the server's key pin
+
+The client trusts the server only if its public key matches a pin: the
+base64 SHA-256 hash of the key's DER-encoded SubjectPublicKeyInfo (the same
+format as curl's `--pinnedpubkey sha256//...`).
+
+From any machine with OpenSSL or LibreSSL, ask the server for its certificate
+and hash the public key:
+
+    openssl s_client -connect pastes.glitchwrks.com:443 -servername pastes.glitchwrks.com </dev/null 2>/dev/null \
+      | openssl x509 -pubkey -noout \
+      | openssl pkey -pubin -outform der \
+      | openssl dgst -sha256 -binary \
+      | openssl base64
+
+The client's **Settings > Server > Get pin from server...** does the same
+thing from the Windows 98 machine. **Neither verifies anything**: both report
+whatever key the server that answered presented, so an interception between
+you and the server would show the interceptor's key. Treat the result as a
+claim to check, not as the answer. The pin is only trustworthy if it matches
+one obtained independently, most directly from the key file on the server
+itself:
+
+    openssl pkey -in /etc/ssl/private/pastes.glitchwrks.com.key -pubout -outform der \
+      | openssl dgst -sha256 -binary | openssl base64
+
+(adjust the path to the key `relayd` uses). Running the network command from
+two different networks and getting the same answer is a weaker check, but
+better than none. The client shows its fetched pin with a warning to this
+effect and adds it only after you confirm you have checked it.
+
 ## Layout
 
 | Path | What |

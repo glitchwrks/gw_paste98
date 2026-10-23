@@ -59,6 +59,8 @@ import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.settings.Values;
 import com.glitchwrks.paste98.client.settings.XmlImport;
+import com.glitchwrks.paste98.tls.PinFetcher;
+import com.glitchwrks.paste98.tls.ServerKeyInfo;
 
 /**
  * The Settings dialog: one tab per {@link Settings} section, one control per
@@ -340,9 +342,21 @@ public final class SettingsDialog {
             area.setFont(new Font("Monospaced", Font.PLAIN, 12));
             final JScrollPane scroll = new JScrollPane(area);
             fixSize(scroll);
+            final JButton fetch = new JButton("Get pin from server...");
+            fetch.setMnemonic(KeyEvent.VK_G);
+            fetch.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    fetchPin(fetch, area);
+                }
+            });
+            final JPanel panel = new JPanel(new BorderLayout(0, 4));
+            panel.add(scroll, BorderLayout.CENTER);
+            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            row.add(fetch);
+            panel.add(row, BorderLayout.SOUTH);
             return new Field() {
                 public JComponent component() {
-                    return scroll;
+                    return panel;
                 }
 
                 public JComponent focusTarget() {
@@ -482,6 +496,82 @@ public final class SettingsDialog {
         } catch (InvalidSettingException e) {
             return text;
         }
+    }
+
+    // ---- fetching a pin from the server -----------------------------------------------
+
+    /**
+     * Connects to the host and port currently in the dialog (not yet saved),
+     * reads the server's certificate in the background, then asks the person
+     * to check the pin before adding it to the pins field.
+     */
+    private void fetchPin(final JButton button, final JTextArea pinsArea) {
+        final Values target;
+        try {
+            target = withText(withText(store.current(), Settings.HOST, fields.get(Settings.HOST).text()),
+                    Settings.PORT, fields.get(Settings.PORT).text());
+        } catch (InvalidSettingException e) {
+            selectSetting(e.getSetting());
+            Dialogs.error(dialog, "Get pin", e.getMessage());
+            return;
+        }
+        final String label = button.getText();
+        button.setEnabled(false);
+        button.setText("Connecting to " + target.get(Settings.HOST) + "...");
+        dialog.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
+        Thread t = new Thread("pin-fetch") {
+            public void run() {
+                ServerKeyInfo info = null;
+                String error = null;
+                try {
+                    info = PinFetcher.fetch(target.tlsOptions());
+                    Log.info("fetched key from " + info.getHost() + ":" + info.getPort() + ": " + info.getKeyDescription()
+                            + ", pin " + info.getPin() + " (not verified)");
+                } catch (IOException e) {
+                    error = e.getMessage() == null ? e.toString() : e.getMessage();
+                    Log.info("pin fetch from " + target.get(Settings.HOST) + " failed: " + e);
+                } catch (RuntimeException e) {
+                    error = e.toString();
+                    Log.error("pin fetch failed", e);
+                }
+                final ServerKeyInfo result = info;
+                final String why = error;
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        button.setText(label);
+                        button.setEnabled(true);
+                        dialog.setCursor(null);
+                        if (result == null) {
+                            Dialogs.error(dialog, "Get pin", "Could not get the key from " + target.get(Settings.HOST)
+                                    + ":" + target.getInt(Settings.PORT) + ": " + why);
+                            return;
+                        }
+                        offerPin(result, pinsArea);
+                    }
+                });
+            }
+        };
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void offerPin(ServerKeyInfo info, JTextArea pinsArea) {
+        List<String> current;
+        try {
+            current = Settings.PINS.parse(pinsArea.getText());
+        } catch (InvalidSettingException e) {
+            current = new ArrayList<String>(); // the field has a typo; compare with nothing
+        }
+        if (!PinVerifyDialog.confirmAdd(dialog, info, current)) {
+            return;
+        }
+        String text = pinsArea.getText();
+        if (text.length() > 0 && !text.endsWith("\n")) {
+            text += "\n";
+        }
+        pinsArea.setText(text + info.getPin());
+        Log.info("pin " + info.getPin() + " added after the user confirmed checking it (not yet saved)");
+        selectSetting(Settings.PINS);
     }
 
     // ---- import / export --------------------------------------------------------

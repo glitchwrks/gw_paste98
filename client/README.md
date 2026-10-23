@@ -42,14 +42,35 @@ adjusting both paths to where Java 5 and the program actually are.
 ## The key pin
 
 The program trusts the server only if its public key matches a key pin in
-Settings: the base64 SHA-256 hash of the key. It does not use any
-certificate authority, so Let's Encrypt renewals do not matter as long as the
-server keeps the same key.
+Settings: the base64 SHA-256 hash of the key. It does not use any certificate
+authority, so Let's Encrypt renewals do not matter as long as the server keeps
+the same key.
 
-On the server (OpenBSD / LibreSSL), from the key relayd uses:
+**Getting it from the server.** Settings > Server > **Get pin from server...**
+connects to the host and port you entered and shows the key the server
+presented: its pin, key type, the names on its certificate, issuer and dates.
+This is NOT verified: it is whatever answered, and if something is
+intercepting the connection it is the interceptor's key. The program adds the
+pin only after you tick "I have checked this pin against a trusted source",
+and warns in red if it differs from pins you already have. A key that changed
+when you did not expect it to is a reason to stop, not to add the new pin.
+
+**Checking it.** Compare the pin character by character with one from a
+source you trust. The most direct is the key file on the server (OpenBSD /
+LibreSSL), from the key relayd uses:
 
     openssl pkey -in /etc/ssl/private/pastes.glitchwrks.com.key -pubout -outform der \
       | openssl dgst -sha256 -binary | openssl base64
+
+From another machine you trust, you can also ask the server over the network.
+Like Get pin from server, this only reports what answered, so it is a check
+from a different vantage point, not proof:
+
+    openssl s_client -connect pastes.glitchwrks.com:443 -servername pastes.glitchwrks.com </dev/null 2>/dev/null \
+      | openssl x509 -pubkey -noout \
+      | openssl pkey -pubin -outform der \
+      | openssl dgst -sha256 -binary \
+      | openssl base64
 
 Put a second pin on its own line for a backup key that the server can be
 switched to without updating every client.
@@ -84,7 +105,7 @@ it, pastes take about half a second.
 |---|---|---|
 | Server | Host | `pastes.glitchwrks.com` |
 | | Port | 443 |
-| | Key pins | none: required |
+| | Key pins | none: required (Get pin from server... can fetch it) |
 | Connection | Cipher | Automatic (ChaCha20 preferred) |
 | | Key exchange | Automatic (X25519 preferred) |
 | | Timeout | 30 seconds |
