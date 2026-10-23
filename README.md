@@ -80,13 +80,12 @@ or has wrong JNI export names or stdcall argument sizes.
 
 ## Status
 
-Verified on a ThinkPad T22 (Java 1.5.0_22, Windows 98): the TLS client and
-pinned-key fixes, through the benchmark, against production.
+Working on a ThinkPad T22 (Pentium III, Java 1.5.0_22, Windows 98): the tray
+icon via `gwtray.dll`, and pastes created on production over pinned TLS 1.2,
+with the address copied to the clipboard (version 0.1.1).
 
-Verified here on JDK 8 / Linux: the client end to end against the fake server
-(including the Swing UI under Xvfb), and the DLL's structure, imports and code
-by static analysis. **Not yet run on Windows 98: the tray client and
-`gwtray.dll`.**
+Also tested on JDK 8 / Linux: unit tests, the client end to end against the
+fake server, and the Swing UI under Xvfb.
 
 ## Licence
 
