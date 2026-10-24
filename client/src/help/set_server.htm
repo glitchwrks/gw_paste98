@@ -1,0 +1,11 @@
+<html><head><title>Server settings</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Server settings</h1>
+<table>
+<tr><th>Setting</th><th>Default</th><th>What it does</th></tr>
+<tr><td class="ui">Host</td><td><code>pastes.glitchwrks.com</code></td><td>The pastes server's name.</td></tr>
+<tr><td class="ui">Port</td><td>443</td><td>The server's HTTPS port.</td></tr>
+<tr><td class="ui">Key pins</td><td>none; required</td><td>One per line: the base64 SHA-256 hash of the server's public key. The program only talks to a server holding one of these keys. See <a href="keypin.htm">The key pin</a>.</td></tr>
+</table>
+<p><span class="ui">Get pin from server...</span> reads the pin from the host and port above. The pin it shows is not verified; check it against a trusted source before adding it. See <a href="keypin.htm">The key pin</a>.</p>
+<p>Changing the host or port logs you out, so your password is never sent to a different server.</p>
+</body></html>

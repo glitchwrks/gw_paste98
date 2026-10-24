@@ -1,0 +1,27 @@
+<html><head><title>Sending pastes</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Sending pastes</h1>
+<p>Right-click the tray icon for the menu; double-click it to open a new paste.</p>
+<table>
+<tr><th>Menu item</th><th>What it does</th></tr>
+<tr><td class="ui">New paste...</td><td>Opens an editor. Type or paste text and press <span class="ui">Send</span> (or Ctrl+Enter).</td></tr>
+<tr><td class="ui">Paste clipboard</td><td>Sends the text on the clipboard. By default it shows the start of the text and asks first.</td></tr>
+<tr><td class="ui">Status...</td><td>Shows the connection and the last paste. See <a href="status.htm">Status</a>.</td></tr>
+<tr><td class="ui">Settings...</td><td>Changes the settings. See <a href="settings.htm">Settings</a>.</td></tr>
+<tr><td class="ui">Help...</td><td>Opens this help.</td></tr>
+<tr><td class="ui">About...</td><td>Shows the version, Java and encryption library in use.</td></tr>
+<tr><td class="ui">Exit</td><td>Removes the icon and quits, forgetting your password.</td></tr>
+</table>
+<p>If the program cannot use the tray (see <a href="trouble.htm">If something goes wrong</a>), a small window with the same buttons appears instead.</p>
+
+<h2>Logging in</h2>
+<p>The first time you send, the program asks for your pastes username and password. The password is kept in memory only, until you exit. The username can be remembered; see <a href="set_account.htm">Account settings</a>. If the server rejects the login, you are asked again.</p>
+
+<h2>The new paste's address</h2>
+<p>When a paste is created, its address (for example <code>https://pastes.glitchwrks.com/k3x9q2ab</code>) is copied to the clipboard and shown in a window. Either can be turned off in <a href="set_pastes.htm">Pastes settings</a>; the last address is always in Status.</p>
+
+<h2>Limits</h2>
+<ul>
+<li>At most 65,535 characters per paste, the server's limit.</li>
+<li>The server stores text as Latin-1 (Western European). Characters outside it, such as the euro sign, are stored as <code>?</code>. The program warns before sending such text.</li>
+</ul>
+</body></html>

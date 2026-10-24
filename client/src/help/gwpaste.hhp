@@ -1,0 +1,34 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=GWPASTE.CHM
+Contents file=toc.hhc
+Index file=index.hhk
+Default topic=overview.htm
+Default Window=main
+Display compile progress=No
+Full-text search=Yes
+Language=0x409 English (United States)
+Title=gw_paste98 Help
+
+[WINDOWS]
+main="gw_paste98 Help","toc.hhc","index.hhk","overview.htm","overview.htm",,,,,0x63520,220,0x387e,[60,40,700,560],,,,,,,0
+
+[FILES]
+overview.htm
+security.htm
+install.htm
+firstrun.htm
+keypin.htm
+using.htm
+status.htm
+cmdline.htm
+settings.htm
+set_server.htm
+set_connection.htm
+set_pastes.htm
+set_account.htm
+set_appearance.htm
+trouble.htm
+files.htm
+licence.htm
+style.css

@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML><HEAD></HEAD><BODY>
+<UL>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Add/Remove Programs"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="AES"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="All Users"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Appearance"><param name="Local" value="set_appearance.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Backup key pin"><param name="Local" value="keypin.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Bouncy Castle"><param name="Local" value="security.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="ChaCha20"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Cipher"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Clipboard"><param name="Local" value="using.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Command line"><param name="Local" value="cmdline.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Export settings"><param name="Local" value="settings.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Files"><param name="Local" value="files.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="First run"><param name="Local" value="firstrun.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Get pin from server"><param name="Local" value="keypin.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="GWTRAY.DLL"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Host"><param name="Local" value="set_server.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Import settings"><param name="Local" value="settings.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Installing"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Java"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Key exchange"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Key mismatch"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Key pin"><param name="Local" value="keypin.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Latin-1"><param name="Local" value="using.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Licence"><param name="Local" value="licence.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Limits"><param name="Local" value="using.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Login failed"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Look and feel"><param name="Local" value="set_appearance.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Metal"><param name="Local" value="set_appearance.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="MS Sans Serif"><param name="Local" value="set_appearance.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Offline"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="openssl"><param name="Local" value="keypin.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Password"><param name="Local" value="security.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="PASTE98.LOG"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="PASTE98.PRF"><param name="Local" value="settings.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="PASTE98_PASSWORD"><param name="Local" value="cmdline.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Port"><param name="Local" value="set_server.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Removing"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="SENDFILE"><param name="Local" value="cmdline.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Settings"><param name="Local" value="settings.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Start with Windows"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Status"><param name="Local" value="status.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Timeout"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="TLS 1.2"><param name="Local" value="security.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Tray icon"><param name="Local" value="using.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Troubleshooting"><param name="Local" value="trouble.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Upgrading"><param name="Local" value="install.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Username"><param name="Local" value="set_account.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Warm-up"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="X25519"><param name="Local" value="set_connection.htm"></OBJECT>
+<LI><OBJECT type="text/sitemap"><param name="Name" value="Zip"><param name="Local" value="install.htm"></OBJECT>
+</UL>
+</BODY></HTML>

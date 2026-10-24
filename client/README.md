@@ -8,6 +8,10 @@ It needs Java 5 (1.5.0_22 is what it was tested against). Encryption is TLS 1.2
 from Bouncy Castle, built into `GWPASTE.JAR`, so Java 5's outdated TLS support
 and certificate list are not used at all.
 
+The full instructions are in the help, `GWPASTE.CHM`: choose **Help...** from
+the tray icon's menu, **gw_paste98 Help** in the Start Menu, or **Help** in
+the Settings window. This file is a plain-text summary for the zip.
+
 ## Files
 
 | File | What it is |
@@ -15,6 +19,7 @@ and certificate list are not used at all.
 | `GWPASTE.JAR` | The program |
 | `GWTRAY.DLL` | Lets Java 5 show a tray icon (Java 5 has no tray support of its own) |
 | `GWTRAY.ICO` | The tray icon |
+| `GWPASTE.CHM` | The help (HTML Help; Windows 98 includes the viewer) |
 | `PASTE98.BAT` | Starts the program (zip only; the installer makes Start Menu shortcuts) |
 | `SENDFILE.BAT` | Sends a text file from the command line |
 | `PASTE98.PRF` | Settings, written by the program (created when you first save settings) |
@@ -30,7 +35,7 @@ Install Java 5 first (the 1.5.0_22 runtime is the last update for Windows 98).
 
 1. Run `gw_paste98-VERSION-setup.exe`. It finds Java 5 through the registry
    and installs to `C:\Program Files\gw_paste98`, with a **gw_paste98** folder
-   in the Start Menu. Tick **Start with Windows** if you want it to start
+   in the Start Menu (the program, its help and the uninstaller). Tick **Start with Windows** if you want it to start
    with Windows (it is off unless an earlier install had it on).
 2. Start it from the last page of setup or from the Start Menu. A clipboard
    icon appears in the notification area, and the Settings window opens.
@@ -111,6 +116,7 @@ Right-click the tray icon for the menu; double-click it to open a new paste.
 - **Status...** shows whether the server is reachable, the encryption in use
   and the last paste's address.
 - **Settings...** changes the settings (next section).
+- **Help...** opens the help.
 - **Exit** removes the icon and quits.
 
 The first time you send, it asks for your pastes username and password. The

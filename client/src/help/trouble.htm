@@ -1,0 +1,28 @@
+<html><head><title>If something goes wrong</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>If something goes wrong</h1>
+<p>Most problems are explained in <code>PASTE98.LOG</code> in the program folder, which is written afresh each time the program starts.</p>
+
+<h2>No tray icon, a small window instead</h2>
+<p>The program could not use <code>GWTRAY.DLL</code>. The window does the same things. The reason is at the bottom of the window and in <code>PASTE98.LOG</code>.</p>
+
+<h2>&quot;Server key mismatch&quot;</h2>
+<p>The server presented a different key from your pins, and nothing was sent. Either the server's key changed, in which case get and check the new pin (see <a href="keypin.htm">The key pin</a>), or something is intercepting the connection. Find out which before adding a new pin.</p>
+
+<h2>&quot;Login failed&quot;</h2>
+<p>Wrong username or password. You are asked again.</p>
+
+<h2>&quot;Offline&quot; in Status</h2>
+<p>The server could not be reached at start-up. Check the network and the host and port in <a href="set_server.htm">Server settings</a>. Sending a paste tries again.</p>
+
+<h2>The first paste is slow</h2>
+<p>The first encrypted connection takes a couple of seconds on a Pentium-class machine. Leave <span class="ui">Connect at start-up to warm up the encryption code</span> on (see <a href="set_connection.htm">Connection settings</a>) so it happens in the background.</p>
+
+<h2>Setup says the program is running</h2>
+<p>Exit it from the tray icon's menu, then press <span class="ui">Retry</span>.</p>
+
+<h2>Setup says Java was not found</h2>
+<p>Install the Java 5 runtime (1.5.0_22) and run setup again.</p>
+
+<h2>Help does not open</h2>
+<p>This help needs HTML Help, which comes with Windows 98 and Internet Explorer 4 or later. You can also open <code>GWPASTE.CHM</code> in the program folder directly.</p>
+</body></html>

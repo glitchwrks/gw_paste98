@@ -17,6 +17,8 @@
   <properties>
     <!-- NSIS compiler for the installer; override with -Dmakensis=/path/to/makensis -->
     <makensis>makensis</makensis>
+    <!-- HTML Help compiler (Free Pascal); override with -Dchmcmd=/path/to/chmcmd -->
+    <chmcmd>chmcmd</chmcmd>
   </properties>
 
   <dependencies>
@@ -103,39 +105,67 @@
           </execution>
 
           <!--
+            target/GWPASTE.CHM, the help (src/help), compiled by chmcmd from
+            Free Pascal (apt install fp-utils), or -Dchmcmd=/path/to/chmcmd.
+
             target/gw_paste98-VERSION-setup.exe, an NSIS installer (src/installer).
-            Needs makensis (NSIS 3) on the PATH, or -Dmakensis=/path/to/makensis;
-            without it the build warns and makes only the zip. The jar goes in
-            uncompressed so the installer's solid LZMA compresses it as a whole,
-            which halves the download.
+            Needs makensis (NSIS 3) on the PATH, or -Dmakensis=/path/to/makensis,
+            and the help. Without either tool the build warns and leaves that
+            part out. The jar goes in uncompressed so the installer's solid LZMA
+            compresses it as a whole, which halves the download.
           -->
           <execution>
-            <id>installer</id>
+            <id>help-and-installer</id>
             <phase>package</phase>
             <goals><goal>run</goal></goals>
             <configuration>
               <target xmlns:if="ant:if" xmlns:unless="ant:unless">
-                <condition property="nsis.found">
+                <!-- The version shown in the help and installer comes from Version.java. -->
+                <loadfile property="app.version" srcfile="${project.basedir}/src/main/java/com/glitchwrks/paste98/client/Version.java">
+                  <filterchain>
+                    <linecontainsregexp>
+                      <regexp pattern="String VERSION = &quot;"/>
+                    </linecontainsregexp>
+                    <replaceregex pattern=".*VERSION = &quot;([0-9.]+)&quot;.*" replace="\1"/>
+                    <striplinebreaks/>
+                  </filterchain>
+                </loadfile>
+
+                <condition property="chmcmd.found">
                   <or>
-                    <available file="${makensis}"/>
-                    <available file="${makensis}" filepath="${env.PATH}"/>
+                    <available file="${chmcmd}"/>
+                    <available file="${chmcmd}" filepath="${env.PATH}"/>
                   </or>
                 </condition>
-                <echo level="warning" unless:set="nsis.found"
+                <condition property="nsis.found">
+                  <and>
+                    <isset property="chmcmd.found"/>
+                    <or>
+                      <available file="${makensis}"/>
+                      <available file="${makensis}" filepath="${env.PATH}"/>
+                    </or>
+                  </and>
+                </condition>
+                <echo level="warning" unless:set="chmcmd.found"
+                      message="chmcmd (Free Pascal) not found: skipping the help file and installer. Install fp-utils or pass -Dchmcmd=/path/to/chmcmd."/>
+                <echo level="warning" unless:set="nsis.found" if:set="chmcmd.found"
                       message="makensis (NSIS 3) not found: skipping the installer. Install NSIS or pass -Dmakensis=/path/to/makensis."/>
 
-                <sequential if:set="nsis.found">
-                  <!-- The version shown by the installer comes from Version.java. -->
-                  <loadfile property="app.version" srcfile="${project.basedir}/src/main/java/com/glitchwrks/paste98/client/Version.java">
-                    <filterchain>
-                      <linecontainsregexp>
-                        <regexp pattern="String VERSION = &quot;"/>
-                      </linecontainsregexp>
-                      <replaceregex pattern=".*VERSION = &quot;([0-9.]+)&quot;.*" replace="\1"/>
-                      <striplinebreaks/>
-                    </filterchain>
-                  </loadfile>
+                <sequential if:set="chmcmd.found">
+                  <delete dir="${project.build.directory}/help"/>
+                  <copy todir="${project.build.directory}/help">
+                    <fileset dir="${project.basedir}/src/help"/>
+                    <filterset begintoken="@" endtoken="@">
+                      <filter token="VERSION" value="${app.version}"/>
+                    </filterset>
+                  </copy>
+                  <exec executable="${chmcmd}" dir="${project.build.directory}/help" failonerror="true">
+                    <arg value="gwpaste.hhp"/>
+                  </exec>
+                  <copy file="${project.build.directory}/help/GWPASTE.CHM" tofile="${project.build.directory}/GWPASTE.CHM"/>
+                </sequential>
 
+                <sequential if:set="nsis.found">
                   <property name="stage" value="${project.build.directory}/installer/stage"/>
                   <delete dir="${project.build.directory}/installer"/>
                   <mkdir dir="${project.build.directory}/installer/jar"/>
@@ -146,7 +176,7 @@
                   </jar>
                   <copy file="${project.basedir}/../native/prebuilt/gwtray.dll" tofile="${stage}/GWTRAY.DLL"/>
                   <copy file="${project.basedir}/../native/prebuilt/gwtray.ico" tofile="${stage}/GWTRAY.ICO"/>
-                  <copy file="${project.basedir}/README.md" tofile="${stage}/README.TXT"/>
+                  <copy file="${project.build.directory}/GWPASTE.CHM" tofile="${stage}/GWPASTE.CHM"/>
                   <copy file="${project.basedir}/../LICENSE" tofile="${stage}/LICENSE.TXT"/>
                   <fixcrlf srcdir="${stage}" includes="*.TXT" eol="crlf"/>
 

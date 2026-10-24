@@ -1,0 +1,28 @@
+<html><head><title>The key pin</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>The key pin</h1>
+<p>The program trusts the server only if its public key matches a key pin in Settings. A pin is the base64 SHA-256 hash of the key: 44 characters ending in <code>=</code>, for example</p>
+<pre>Example0Example0Example0Example0Example0Ex0=</pre>
+<p>(an example, not the real pin). It does not use any certificate authority, so Let's Encrypt renewals make no difference as long as the server keeps the same key. See <a href="security.htm">How the connection is secured</a>.</p>
+
+<h2>Getting the pin from the server</h2>
+<p>Settings &gt; Server &gt; <span class="ui">Get pin from server...</span> connects to the host and port you entered and shows the key the server presented: its pin, key type, the names on its certificate, issuer and dates.</p>
+<div class="warn"><b>This pin has NOT been verified.</b> It is whatever answered the connection. If something is intercepting the connection, it is the interceptor's key. The program adds the pin only after you tick <span class="ui">I have checked this pin against a trusted source and it matches</span>, and warns in red if it differs from the pins you already have.</div>
+<p>A key that changed when you did not expect it to is a reason to stop and find out why, not to add the new pin. If the pin is already in your list, the program says so and there is nothing to do.</p>
+
+<h2>Checking the pin</h2>
+<p>Compare the pin character by character with one from a source you trust. The most direct is the key file on the server itself (OpenSSL or LibreSSL), from the key the server uses:</p>
+<pre>openssl pkey -in /etc/ssl/private/pastes.glitchwrks.com.key -pubout -outform der \
+  | openssl dgst -sha256 -binary | openssl base64</pre>
+<p>From another machine you trust, you can also ask the server over the network. Like Get pin from server, this only reports what answered, so it is a check from a different vantage point, not proof:</p>
+<pre>openssl s_client -connect pastes.glitchwrks.com:443 -servername pastes.glitchwrks.com &lt;/dev/null 2&gt;/dev/null \
+  | openssl x509 -pubkey -noout \
+  | openssl pkey -pubin -outform der \
+  | openssl dgst -sha256 -binary \
+  | openssl base64</pre>
+
+<h2>Backup pins</h2>
+<p>Put each pin on its own line. A second pin for a backup key lets the server switch to that key without every client needing an update.</p>
+
+<h2>If the key does not match</h2>
+<p>Sending fails with <span class="ui">Server key mismatch</span> and nothing is sent. See <a href="trouble.htm">If something goes wrong</a>.</p>
+</body></html>

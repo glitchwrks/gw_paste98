@@ -81,7 +81,8 @@ ShowUninstDetails show
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_TEXT "Start ${APP} now"
 !define MUI_FINISHPAGE_RUN_FUNCTION StartProgram
-!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README.TXT"
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\GWPASTE.CHM"
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Open the help"
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !insertmacro MUI_PAGE_FINISH
 
@@ -196,9 +197,10 @@ Section "${APP} (required)" SecMain
   File "${STAGE}\GWPASTE.JAR"
   File "${STAGE}\GWTRAY.DLL"
   File "${STAGE}\GWTRAY.ICO"
-  File "${STAGE}\README.TXT"
+  File "${STAGE}\GWPASTE.CHM"
   File "${STAGE}\LICENSE.TXT"
   ; Settings (PASTE98.PRF) are not in the installer, so they are never touched.
+  Delete "$INSTDIR\README.TXT" ; 0.5.x; replaced by the help
 
   ; SENDFILE.BAT with full paths, so it works from any folder without Java on
   ; the PATH. Short (8.3) names keep the line within COMMAND.COM's limit.
@@ -208,7 +210,7 @@ Section "${APP} (required)" SecMain
   FileOpen $2 "$INSTDIR\SENDFILE.BAT" w
   FileWrite $2 "@echo off$\r$\n"
   FileWrite $2 "rem Sends a text file as a paste and prints its address.$\r$\n"
-  FileWrite $2 "rem Usage: SENDFILE filename   (written by setup; see README.TXT)$\r$\n"
+  FileWrite $2 "rem Usage: SENDFILE filename   (written by setup; see the help)$\r$\n"
   FileWrite $2 "if $\"%1$\"==$\"$\" goto usage$\r$\n"
   FileWrite $2 "$0java.exe ${JAVA_ARGS} $1 --send %1 %2 %3$\r$\n"
   FileWrite $2 "goto end$\r$\n"
@@ -225,7 +227,7 @@ Section "${APP} (required)" SecMain
   !insertmacro CHECK_FILE "GWPASTE.JAR"
   !insertmacro CHECK_FILE "GWTRAY.DLL"
   !insertmacro CHECK_FILE "GWTRAY.ICO"
-  !insertmacro CHECK_FILE "README.TXT"
+  !insertmacro CHECK_FILE "GWPASTE.CHM"
   !insertmacro CHECK_FILE "LICENSE.TXT"
   !insertmacro CHECK_FILE "SENDFILE.BAT"
   !insertmacro CHECK_FILE "UNINST.EXE"
@@ -250,8 +252,10 @@ Section "Start Menu shortcuts" SecMenu
   CreateShortCut "${MENU_DIR}\${APP}.lnk" "$JAVAW" '${JAVA_ARGS} "$INSTDIR\GWPASTE.JAR"' "$INSTDIR\GWTRAY.ICO" 0
   !insertmacro CHECK_ERRORS "${MENU_DIR}\${APP}.lnk"
   ClearErrors
-  CreateShortCut "${MENU_DIR}\Read me.lnk" "$INSTDIR\README.TXT"
-  !insertmacro CHECK_ERRORS "${MENU_DIR}\Read me.lnk"
+  ClearErrors
+  CreateShortCut "${MENU_DIR}\${APP} Help.lnk" "$INSTDIR\GWPASTE.CHM"
+  !insertmacro CHECK_ERRORS "${MENU_DIR}\${APP} Help.lnk"
+  Delete "${MENU_DIR}\Read me.lnk" ; 0.5.x
   ClearErrors
   CreateShortCut "${MENU_DIR}\Uninstall ${APP}.lnk" "$INSTDIR\UNINST.EXE"
   !insertmacro CHECK_ERRORS "${MENU_DIR}\Uninstall ${APP}.lnk"
@@ -271,6 +275,7 @@ Section "-Remove unselected shortcuts"
   ${EndIf}
   ${IfNot} ${SectionIsSelected} ${SecMenu}
     Delete "${MENU_DIR}\${APP}.lnk"
+    Delete "${MENU_DIR}\${APP} Help.lnk"
     Delete "${MENU_DIR}\Read me.lnk"
     Delete "${MENU_DIR}\Uninstall ${APP}.lnk"
     RMDir "${MENU_DIR}"
@@ -319,6 +324,7 @@ FunctionEnd
 Section "Uninstall"
   Delete "${STARTUP_LNK}"
   Delete "${MENU_DIR}\${APP}.lnk"
+  Delete "${MENU_DIR}\${APP} Help.lnk"
   Delete "${MENU_DIR}\Read me.lnk"
   Delete "${MENU_DIR}\Uninstall ${APP}.lnk"
   RMDir "${MENU_DIR}"
@@ -326,6 +332,7 @@ Section "Uninstall"
   Delete "$INSTDIR\GWPASTE.JAR"
   Delete "$INSTDIR\GWTRAY.DLL"
   Delete "$INSTDIR\GWTRAY.ICO"
+  Delete "$INSTDIR\GWPASTE.CHM"
   Delete "$INSTDIR\README.TXT"
   Delete "$INSTDIR\LICENSE.TXT"
   Delete "$INSTDIR\SENDFILE.BAT"

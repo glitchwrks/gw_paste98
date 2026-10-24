@@ -77,7 +77,7 @@ effect and adds it only after you confirm you have checked it.
 | Path | What |
 |---|---|
 | `core/` | Pinned TLS 1.2 client (`tls`) and pastes API client (`api`); shared |
-| `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip` and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
+| `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
 | `bench/` | `pastebench`, the TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
 | `tools/` | `fake_pastes_server.py`, a local stand-in for the pastes service, for testing |
@@ -108,9 +108,13 @@ This compiles everything for Java 5, runs the unit tests, fails the build if
 any code uses an API newer than Java 5 (animal-sniffer), shrinks the jars with
 ProGuard and assembles the two Windows 98 zips.
 
-If **NSIS 3** is installed (`apt install nsis`, or pass
-`-Dmakensis=/path/to/makensis`), the build also makes the Windows installer;
-without it, the build warns and skips it. The installer is built as ANSI
+The help file is compiled HTML Help (`.CHM`), the format Windows 98's own
+help uses, built with **chmcmd** from Free Pascal (`apt install fp-utils`, or
+pass `-Dchmcmd=/path/to/chmcmd`). If **NSIS 3** is also installed
+(`apt install nsis`, or pass `-Dmakensis=/path/to/makensis`), the build makes
+the Windows installer. Without either tool, the build warns and leaves out
+what it cannot make. `HelpTest` fails the build if a setting is missing from
+its Settings tab's help page or a help link is broken. The installer is built as ANSI
 (`Unicode false`) because NSIS's Unicode installers do not run on Windows
 95/98/ME, and makensis warnings fail the build. It holds an uncompressed copy
 of `GWPASTE.JAR` so its solid LZMA compression covers the whole jar, making
@@ -161,6 +165,10 @@ also tested under Wine in Windows 98 mode (Java detection, upgrade, the
 running-program check). 0.5.0 created no Start Menu items on real Windows 98,
 where it used the All Users Start Menu; 0.5.1 uses the current user's on
 Windows 9x.
+
+0.6.0 adds the help file (`GWPASTE.CHM`), opened from the tray menu, the
+Settings window and the Start Menu, replacing the installed `README.TXT`.
+Its upgrade over 0.5.1 is tested under Wine; it still needs a run on the T22.
 
 ## Licence
 

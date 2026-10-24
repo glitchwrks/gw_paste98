@@ -117,7 +117,7 @@ final class PinVerifyDialog {
                     + "them read your password and pastes."), c);
             c.gridy = row++;
             body.add(text(null, "Before adding it, compare it character by character with a pin from a source you "
-                    + "trust: the server's administrator, or the openssl command in README.TXT run on the "
+                    + "trust: the server's administrator, or the openssl command in Help (The key pin) run on the "
                     + "server itself or on a trusted machine and network."), c);
         }
 
@@ -153,11 +153,19 @@ final class PinVerifyDialog {
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
 
+        JButton help = new JButton("Help");
+        help.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Help.show(dialog, Help.KEY_PIN);
+            }
+        });
+
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 6));
         if (!known) {
             buttons.add(addButton);
         }
         buttons.add(cancel);
+        buttons.add(help);
 
         dialog.getContentPane().add(body, BorderLayout.CENTER);
         dialog.getContentPane().add(buttons, BorderLayout.SOUTH);

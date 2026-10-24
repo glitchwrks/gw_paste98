@@ -1,0 +1,19 @@
+<html><head><title>Settings</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Settings</h1>
+<p><span class="ui">Settings...</span> in the tray menu opens the Settings window. Each tab has its own page:</p>
+<ul>
+<li><a href="set_server.htm">Server</a>: where pastes go, and which key to trust</li>
+<li><a href="set_connection.htm">Connection</a>: encryption choices, timeout and start-up connection</li>
+<li><a href="set_pastes.htm">Pastes</a>: what happens before and after sending</li>
+<li><a href="set_account.htm">Account</a>: the remembered username</li>
+<li><a href="set_appearance.htm">Appearance</a>: the program's look</li>
+</ul>
+<p>The <span class="ui">Help</span> button opens the page for the tab you are on. Every value is checked when you press <span class="ui">OK</span>. Changes take effect on the next paste; no restart is needed.</p>
+
+<h2>Where settings are kept</h2>
+<p>Settings are saved in <code>PASTE98.PRF</code> in the program's folder, not in the Windows registry. The previous version is kept as <code>PASTE98.BAK</code> in case saving is interrupted.</p>
+<p><code>PASTE98.PRF</code> is plain text, but change settings in the Settings window: it checks every value, while a mistake made by hand is ignored (with a note in <code>PASTE98.LOG</code>) and the default used instead.</p>
+
+<h2>Copying settings to another machine</h2>
+<p><span class="ui">Export...</span> saves the settings to an XML file in Java's standard preferences format. <span class="ui">Import...</span> reads one back into the Settings window for you to review before pressing OK. Exported files contain the server, pins and username, never the password.</p>
+</body></html>

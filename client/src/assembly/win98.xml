@@ -4,6 +4,7 @@
     gw_paste98\GWPASTE.JAR     client + Bouncy Castle, shrunk by ProGuard
     gw_paste98\GWTRAY.DLL      tray icon support (native/gwtray.c)
     gw_paste98\GWTRAY.ICO      tray icon
+    gw_paste98\GWPASTE.CHM     help
     (settings are created on first run, in PASTE98.PRF)
     gw_paste98\PASTE98.BAT     starts the tray app
     gw_paste98\SENDFILE.BAT    command-line paste
@@ -42,6 +43,14 @@
     </file>
   </files>
   <fileSets>
+    <!-- The help, if chmcmd was available to build it. -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>GWPASTE.CHM</include>
+      </includes>
+    </fileSet>
     <fileSet>
       <directory>src/dist</directory>
       <outputDirectory></outputDirectory>

@@ -1,0 +1,34 @@
+<html><head><title>Installing</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Installing</h1>
+<p>Install Java 5 first. The Java 1.5.0_22 runtime is the last update for Windows 98.</p>
+
+<h2>With the installer</h2>
+<ol>
+<li>Run <code>gw_paste98-<i>version</i>-setup.exe</code>. It finds Java 5 through the registry and refuses to continue without it.</li>
+<li>Choose the parts to install:
+  <ul>
+  <li><span class="ui">Start Menu shortcuts</span>: a <span class="ui">gw_paste98</span> folder with the program, this help and the uninstaller.</li>
+  <li><span class="ui">Start with Windows</span>: starts the program when Windows starts. Off unless an earlier install had it on.</li>
+  </ul></li>
+<li>Choose the folder; the default is <code>C:\Program Files\gw_paste98</code>.</li>
+<li>Start the program from the last page of setup or from the Start Menu, then follow <a href="firstrun.htm">Setting up for the first time</a>.</li>
+</ol>
+<p>The shortcuts point at the Java that setup found, so run setup again if you move or replace Java.</p>
+
+<h2>From the zip</h2>
+<ol>
+<li>Copy the <code>gw_paste98</code> folder anywhere, for example <code>C:\GW_PASTE98</code>.</li>
+<li>Run <code>PASTE98.BAT</code>.</li>
+</ol>
+<p>To start it with Windows, make a shortcut in <code>C:\WINDOWS\Start Menu\Programs\StartUp</code> with the target</p>
+<pre>"C:\Program Files\Java\jre1.5.0_22\bin\javaw.exe" -Xmx32m -jar C:\GW_PASTE98\GWPASTE.JAR</pre>
+<p>adjusting both paths to where Java 5 and the program actually are.</p>
+
+<h2>Upgrading</h2>
+<p>Exit the program (right-click the tray icon and choose <span class="ui">Exit</span>), then run the new setup. Setup will not continue while the program is running, because Windows cannot replace files in use. Your settings and key pins in <code>PASTE98.PRF</code> are kept, and so is your Start with Windows choice.</p>
+<p>From the zip: exit the program and copy the new files over the old ones. To move from the zip to the installer, copy <code>PASTE98.PRF</code> into the installed folder before starting the installed copy.</p>
+<p>Upgrading from version 0.1.x: on first start, the program copies your settings from <code>PASTE98.CFG</code> and <code>PASTE98.USR</code>, renames <code>PASTE98.CFG</code> to <code>PASTE98.OLD</code> and deletes <code>PASTE98.USR</code>.</p>
+
+<h2>Removing</h2>
+<p>Use <span class="ui">Add/Remove Programs</span> in Control Panel, or <span class="ui">Uninstall gw_paste98</span> in the Start Menu. It asks whether to keep your settings and key pins; keep them if you might install the program again.</p>
+</body></html>

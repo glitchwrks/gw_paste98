@@ -30,6 +30,7 @@ import com.glitchwrks.paste98.client.ui.Appearance;
 import com.glitchwrks.paste98.client.ui.ComposeWindow;
 import com.glitchwrks.paste98.client.ui.Dialogs;
 import com.glitchwrks.paste98.client.ui.FallbackWindow;
+import com.glitchwrks.paste98.client.ui.Help;
 import com.glitchwrks.paste98.client.ui.SettingsDialog;
 
 /**
@@ -40,14 +41,15 @@ import com.glitchwrks.paste98.client.ui.SettingsDialog;
 public final class Controller implements NativeTray.Listener, ComposeWindow.Actions, PasteService.StatusListener,
         SettingsStore.Listener {
 
-    static final String[] MENU = { "New paste...", "Paste clipboard", "-", "Status...", "Settings...", "About...", "-",
-        "Exit" };
+    static final String[] MENU = { "New paste...", "Paste clipboard", "-", "Status...", "Settings...", "-", "Help...",
+        "About...", "-", "Exit" };
     static final int ITEM_NEW = 0;
     static final int ITEM_CLIPBOARD = 1;
     static final int ITEM_STATUS = 3;
     static final int ITEM_SETTINGS = 4;
-    static final int ITEM_ABOUT = 5;
-    static final int ITEM_EXIT = 7;
+    static final int ITEM_HELP = 6;
+    static final int ITEM_ABOUT = 7;
+    static final int ITEM_EXIT = 9;
 
     private final PasteService service;
     private final SettingsStore settings;
@@ -150,6 +152,9 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
             break;
         case ITEM_SETTINGS:
             SettingsDialog.show(parent(), settings, null, null);
+            break;
+        case ITEM_HELP:
+            Help.show(parent(), Help.OVERVIEW);
             break;
         case ITEM_ABOUT:
             showAbout();

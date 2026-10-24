@@ -1,0 +1,11 @@
+<html><head><title>Connection settings</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>Connection settings</h1>
+<table>
+<tr><th>Setting</th><th>Default</th><th>What it does</th></tr>
+<tr><td class="ui">Cipher</td><td>Automatic (ChaCha20 preferred)</td><td>The encryption offered to the server. ChaCha20-Poly1305 is fastest on processors without AES instructions, which includes every Windows 98-era processor. The server makes the final choice; <span class="ui">only</span> choices offer just one.</td></tr>
+<tr><td class="ui">Key exchange</td><td>Automatic (X25519 preferred)</td><td>How the connection's keys are agreed. X25519 is about three times faster than P-256 on a Pentium III.</td></tr>
+<tr><td class="ui">Timeout</td><td>30 seconds</td><td>How long to wait for the server before giving up, from 5 to 300 seconds.</td></tr>
+<tr><td class="ui">Connect at start-up to warm up the encryption code</td><td>on</td><td>Connects once in the background at start-up, so the first paste takes about half a second instead of two or three. Turn it off if the machine is often offline.</td></tr>
+</table>
+<p>Status shows the cipher and key exchange actually in use.</p>
+</body></html>

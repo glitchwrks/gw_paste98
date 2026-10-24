@@ -129,6 +129,13 @@ public final class SettingsDialog {
                 exportFile();
             }
         });
+        JButton help = new JButton("Help");
+        help.setMnemonic(KeyEvent.VK_H);
+        help.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Help.show(dialog, Help.settingsTopic(Settings.SECTIONS[tabs.getSelectedIndex()]));
+            }
+        });
         JButton ok = new JButton("OK");
         ok.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -153,6 +160,7 @@ public final class SettingsDialog {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 6));
         right.add(ok);
         right.add(cancel);
+        right.add(help);
         JPanel buttons = new JPanel(new BorderLayout());
         buttons.add(left, BorderLayout.WEST);
         buttons.add(right, BorderLayout.EAST);

@@ -1,0 +1,9 @@
+<html><head><title>The command line</title><link rel="stylesheet" href="style.css"></head><body>
+<h1>The command line</h1>
+<pre>SENDFILE filename</pre>
+<p>sends a text file as a paste and prints its address, using the settings saved by the tray program. The password comes from the <code>PASTE98_PASSWORD</code> environment variable, and the username from the remembered username (or add <code>--user NAME</code>). For example, at an MS-DOS Prompt:</p>
+<pre>SET PASTE98_PASSWORD=yourpassword
+SENDFILE C:\AUTOEXEC.BAT</pre>
+<p>The installer writes <code>SENDFILE.BAT</code> with the full paths of Java and the program, so it works from any folder; add the program folder to your PATH to run it by name. The zip's <code>SENDFILE.BAT</code> must be run from the program folder, with Java on the PATH.</p>
+<p>Other options for <code>GWPASTE.JAR</code>: <code>--version</code> prints the version, and <code>--no-tray</code> starts the program with its window instead of a tray icon.</p>
+</body></html>
