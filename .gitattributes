@@ -1,0 +1,5 @@
+# HTML Help project files: Windows 98's HTML Help viewer shows an empty
+# Contents tab if the contents file has Unix line endings. Keep them CRLF.
+client/src/help/*.hhc -text
+client/src/help/*.hhk -text
+client/src/help/*.hhp -text

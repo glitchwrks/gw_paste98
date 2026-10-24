@@ -1,36 +1,102 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<HTML><HEAD></HEAD><BODY>
-<OBJECT type="text/site properties"><param name="ImageType" value="Folder"></OBJECT>
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="ImageType" value="Folder">
+</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="About gw_paste98"><param name="Local" value="overview.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="About gw_paste98">
+		<param name="Local" value="overview.htm">
+		</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="How the connection is secured"><param name="Local" value="security.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="How the connection is secured">
+		<param name="Local" value="security.htm">
+		</OBJECT>
 </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Installing"><param name="Local" value="install.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Getting started"><param name="Local" value="firstrun.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Installing">
+		<param name="Local" value="install.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Getting started">
+		<param name="Local" value="firstrun.htm">
+		</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Setting up for the first time"><param name="Local" value="firstrun.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="The key pin"><param name="Local" value="keypin.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Setting up for the first time">
+		<param name="Local" value="firstrun.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="The key pin">
+		<param name="Local" value="keypin.htm">
+		</OBJECT>
 </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Using gw_paste98"><param name="Local" value="using.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Using gw_paste98">
+		<param name="Local" value="using.htm">
+		</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Sending pastes"><param name="Local" value="using.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Status"><param name="Local" value="status.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="The command line"><param name="Local" value="cmdline.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Sending pastes">
+		<param name="Local" value="using.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Status">
+		<param name="Local" value="status.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="The command line">
+		<param name="Local" value="cmdline.htm">
+		</OBJECT>
 </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Settings"><param name="Local" value="settings.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Settings">
+		<param name="Local" value="settings.htm">
+		</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Server"><param name="Local" value="set_server.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Connection"><param name="Local" value="set_connection.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Pastes"><param name="Local" value="set_pastes.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Account"><param name="Local" value="set_account.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Appearance"><param name="Local" value="set_appearance.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Server">
+		<param name="Local" value="set_server.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Connection">
+		<param name="Local" value="set_connection.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Pastes">
+		<param name="Local" value="set_pastes.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Account">
+		<param name="Local" value="set_account.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Appearance">
+		<param name="Local" value="set_appearance.htm">
+		</OBJECT>
 </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Troubleshooting"><param name="Local" value="trouble.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Troubleshooting">
+		<param name="Local" value="trouble.htm">
+		</OBJECT>
 <UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="If something goes wrong"><param name="Local" value="trouble.htm"></OBJECT>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="The program's files"><param name="Local" value="files.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="If something goes wrong">
+		<param name="Local" value="trouble.htm">
+		</OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="The program's files">
+		<param name="Local" value="files.htm">
+		</OBJECT>
 </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Licence"><param name="Local" value="licence.htm"></OBJECT>
+<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Licence">
+		<param name="Local" value="licence.htm">
+		</OBJECT>
 </UL>
 </BODY></HTML>

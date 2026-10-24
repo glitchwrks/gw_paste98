@@ -61,11 +61,42 @@ public class HelpTest {
         assertTrue(new File(HELP, Help.KEY_PIN).isFile());
     }
 
+    /**
+     * Windows 98's HTML Help viewer (tested on a ThinkPad T22) shows an empty
+     * Contents tab unless the contents file is in HTML Help Workshop's layout
+     * with CRLF line endings; the index is kept the same way.
+     */
+    @Test
+    public void sitemapsUseHtmlHelpWorkshopLayout() throws IOException {
+        String[] names = { "toc.hhc", "index.hhk" };
+        for (int i = 0; i < names.length; i++) {
+            String raw = readRaw(new File(HELP, names[i]));
+            assertTrue(names[i] + " has a line not ending in CRLF", raw.replaceAll("\r\n", "").indexOf('\n') < 0);
+            assertTrue(names[i] + " lacks the Sitemap 1.0 header", raw.indexOf("<!-- Sitemap 1.0 -->") >= 0);
+            assertTrue(names[i] + " puts params on the OBJECT line", raw.indexOf("\"text/sitemap\"><param") < 0);
+        }
+    }
+
     @Test
     public void hhTargetFormat() {
         File chm = new File("C:\\Program Files\\gw_paste98\\GWPASTE.CHM");
         assertEquals(chm.getPath() + "::/set_server.htm", Help.target(chm, Help.settingsTopic("Server")));
         assertEquals(chm.getPath(), Help.target(chm, null));
+    }
+
+    private static String readRaw(File f) throws IOException {
+        FileReader r = new FileReader(f);
+        try {
+            StringBuilder sb = new StringBuilder();
+            char[] buf = new char[4096];
+            int n;
+            while ((n = r.read(buf)) > 0) {
+                sb.append(buf, 0, n);
+            }
+            return sb.toString();
+        } finally {
+            r.close();
+        }
     }
 
     private static String read(File f) throws IOException {
