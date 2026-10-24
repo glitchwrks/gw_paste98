@@ -4,7 +4,7 @@
 # Licensed under the GNU GPL v3 or later. See the LICENSE file for details.
 """
 Draws the large, full-colour version of the program's icon: a paste jar with
-its lid knocked askew and paste squeezing out, labelled with the Glitch Works
+its lid tipped open over a mound of paste, labelled with the Glitch Works
 badge (art/glitchworks-logo.png, the 256x256 www.glitchwrks.com favicon art).
 The tray sizes are hand-drawn pixel art in make_icon.py, in the same design.
 
@@ -49,21 +49,19 @@ def draw():
     d.rounded_rectangle([p(92), p(62), p(102), p(116)], radius=p(5), fill=GLASS_SHADE)
     d.rounded_rectangle([p(27), p(64), p(33), p(112)], radius=p(3), fill=GLASS_HIGHLIGHT)
 
+    # Paste heaped in the open mouth (the neck, drawn next, hides its base).
+    d.ellipse([p(36), p(22), p(92), p(62)], fill=K)
+    d.ellipse([p(40), p(26), p(88), p(60)], fill=PASTE)
+    d.ellipse([p(48), p(30), p(60), p(36)], fill=(255, 255, 255, 255))
+    d.arc([p(40), p(26), p(88), p(60)], start=300, end=360, fill=PASTE_SHADE, width=p(3))
+
     # Neck, with a thread.
     d.rectangle([p(34), p(40), p(94), p(58)], fill=K)
     d.rectangle([p(38), p(44), p(90), p(55)], fill=GLASS)
     d.rectangle([p(38), p(49), p(90), p(51)], fill=GLASS_SHADE)
 
-    # Paste squeezing out under the raised side of the lid.
-    d.polygon([(p(40), p(44)), (p(92), p(44)), (p(98), p(26)), (p(60), p(36))], fill=K)
-    d.ellipse([p(84), p(26), p(110), p(48)], fill=K)
-    d.polygon([(p(43), p(42)), (p(90), p(42)), (p(95), p(29)), (p(62), p(37))], fill=PASTE)
-    d.ellipse([p(87), p(29), p(107), p(45)], fill=PASTE)
-    d.ellipse([p(92), p(32), p(98), p(36)], fill=(255, 255, 255, 255))
-    d.arc([p(87), p(29), p(107), p(45)], start=20, end=120, fill=PASTE_SHADE, width=p(2))
-
     # Lid, tilted 16 degrees about its bottom-left corner, which rests on the rim.
-    ang = math.radians(16)
+    ang = math.radians(20)
     ox, oy = 30.0, 42.0
 
     def lid(points, fill):

@@ -25,7 +25,7 @@ PALETTE = [
     (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
 ]
 
-# A paste jar with its lid knocked askew and paste squeezing out, labelled
+# A paste jar with its lid tipped open over a mound of paste, labelled
 # with the Glitch Works badge (black disc, grey ring, green square wave; see
 # art/glitchworks-logo.png and make_logo.py for the large version). Each size
 # is drawn separately: scaling down loses the badge's wave.
@@ -51,17 +51,17 @@ ART16 = [
 ]
 
 ART32 = [
-    "......................KKK.......",
-    "...................KKKRRK.......",
-    "................KKKRRRRRK.......",
-    ".............KKKWRRRRRRRK.......",
-    "..........KKKWWWRRRRRRrKK.......",
-    ".......KKKWWWRRRRRRKrKrKK.......",
-    ".......KRWRRRRRRrKrKrKKKK.......",
-    ".......KRRRRRKrKrKrKKKWWK.......",
-    ".......KRRrKrKrKKKKKWWWWWK......",
-    ".......KrKrKrKKKWWWKWWWWWK......",
-    ".......KrKKKKWWWWWWWKWWWK.......",
+    "................................",
+    "....................K...........",
+    ".................KKKK...........",
+    "..............KKKRRRK...........",
+    "...........KKKRRRRRRK...........",
+    "........KKKRRRRRRrrrK...........",
+    ".....KKKRRRRRRrrrKKK............",
+    ".....KRRRRRrrrKKKWWWK...........",
+    ".....KRRrrrKKKWWWWWWWK..........",
+    ".....KrrKKKSWWWWWWWWWWK.........",
+    ".....KKKKWWWWWWWWWWWWWWK........",
     ".......KKKKKKKKKKKKKKKKK........",
     ".........KSSSSSSSSSSSSK.........",
     ".........KGGGGGGGGGGGGK.........",
