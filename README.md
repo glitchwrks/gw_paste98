@@ -171,7 +171,11 @@ Settings window and the Start Menu, replacing the installed `README.TXT`.
 On the T22, 0.6.0's installer crashed Windows (fatal exception 0E in the
 ENABLE VxD) on moving to its Finish page, with or without the page's
 checkboxes; 0.6.1 has no Finish page and offers "Start gw_paste98 when setup
-closes" on the components page instead.
+closes" on the components page instead. The help's Contents tab was empty in
+Windows 98's viewer until 0.6.2 wrote the contents file in HTML Help
+Workshop's layout with CRLF line endings. 0.6.2 is verified on the T22:
+upgrade over 0.5.1/0.6.x with settings kept, and the help's Contents, Index
+and per-tab Help buttons.
 
 ## Licence
 
