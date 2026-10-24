@@ -156,9 +156,11 @@ Appearance setting (version 0.4.0).
 Also tested on JDK 8 / Linux: unit tests, the client end to end against the
 fake server, and the Swing UI under Xvfb.
 
-The installer (0.5.0) is tested under Wine in Windows 98 mode only so far:
-Java detection, install, upgrade, the running-program check and uninstall.
-It still needs a run on the T22.
+The installer (0.5.1) installs and uninstalls correctly on the T22, and is
+also tested under Wine in Windows 98 mode (Java detection, upgrade, the
+running-program check). 0.5.0 created no Start Menu items on real Windows 98,
+where it used the All Users Start Menu; 0.5.1 uses the current user's on
+Windows 9x.
 
 ## Licence
 
