@@ -38,7 +38,7 @@ Install Java 5 first (the 1.5.0_22 runtime is the last update for Windows 98).
    in the Start Menu (the program, its help and the uninstaller). Tick **Start with Windows** if you want it to start
    with Windows (it is off unless an earlier install had it on).
 2. Press **Close** at the end of setup; the program starts if **Start
-   gw_paste98 when setup closes** was ticked, or start it from the Start Menu. A clipboard
+   gw_paste98 when setup closes** was ticked, or start it from the Start Menu. A paste jar
    icon appears in the notification area, and the Settings window opens.
 3. Enter the server's key pin (next section) and press OK.
 
@@ -54,7 +54,7 @@ any folder. `PASTE98.BAT` is only in the zip.
 ### From the zip
 
 1. Copy the `gw_paste98` folder anywhere, for example `C:\GW_PASTE98`.
-2. Run `PASTE98.BAT`. A clipboard icon appears in the notification area, and
+2. Run `PASTE98.BAT`. A paste jar icon appears in the notification area, and
    the Settings window opens.
 3. Enter the server's key pin (next section) and press OK.
 

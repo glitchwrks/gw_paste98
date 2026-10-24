@@ -25,36 +25,67 @@ PALETTE = [
     (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
 ]
 
-# A clipboard: navy board, silver clip, white sheet with text lines.
-# '.' transparent, K black, N navy, S silver, G grey, W white, B blue, Y yellow
+# A paste jar with its lid knocked askew and paste squeezing out, labelled
+# with the Glitch Works badge (black disc, grey ring, green square wave; see
+# art/glitchworks-logo.png and make_logo.py for the large version). Each size
+# is drawn separately: scaling down loses the badge's wave.
+# '.' transparent, K black, S silver (glass), G grey, W white (paste,
+# highlights), R red / r dark red (lid), L bright green (the wave)
 ART16 = [
-    "................",
-    ".....KKKKKK.....",
-    "..KKKKSSSSKKKK..",
-    "..KNNKSSSSKNNK..",
-    "..KNNKKKKKKNNK..",
-    "..KNWWWWWWWWNK..",
-    "..KNWBBBBBWWNK..",
-    "..KNWWWWWWWWNK..",
-    "..KNWGGGGGGWNK..",
-    "..KNWWWWWWWWNK..",
-    "..KNWGGGGWWWNK..",
-    "..KNWWWWWWWWNK..",
-    "..KNWGGGGGWWNK..",
-    "..KNWWWWWWWWNK..",
-    "..KNNNNNNNNNNK..",
+    "........KKKKKKK.",
+    "..KKKKKKRRRRRRK.",
+    "..KWWRRRrrrrrrK.",
+    "..KrrrrrKKKKKKK.",
+    "..KKKKKKWWWWWWWK",
+    "...KSSSSSSSSKKK.",
+    "..KKKKKKKKKKKK..",
+    ".KWSSSGGGGSSSSK.",
+    ".KWSSGKKKKGSSSK.",
+    ".KWSGKLLLKLLSSK.",
+    ".KWSGKLKLKLGSSK.",
+    ".KWSGKLKLKLGSSK.",
+    ".KWSLLLKLLLGSSK.",
+    ".KWSSGKKKKGSSSK.",
+    ".KWSSSGGGGSSSSK.",
     "..KKKKKKKKKKKK..",
 ]
 
-COLOURS = {"K": 0, "N": 4, "S": 7, "G": 8, "W": 15, "B": 12, "Y": 11}
+ART32 = [
+    "......................KKK.......",
+    "...................KKKRRK.......",
+    "................KKKRRRRRK.......",
+    ".............KKKWRRRRRRRK.......",
+    "..........KKKWWWRRRRRRrKK.......",
+    ".......KKKWWWRRRRRRKrKrKK.......",
+    ".......KRWRRRRRRrKrKrKKKK.......",
+    ".......KRRRRRKrKrKrKKKWWK.......",
+    ".......KRRrKrKrKKKKKWWWWWK......",
+    ".......KrKrKrKKKWWWKWWWWWK......",
+    ".......KrKKKKWWWWWWWKWWWK.......",
+    ".......KKKKKKKKKKKKKKKKK........",
+    ".........KSSSSSSSSSSSSK.........",
+    ".........KGGGGGGGGGGGGK.........",
+    ".......KKKKKKKKKKKKKKKKKK.......",
+    "......KSSSSSSSGGGGSSSSSSSK......",
+    ".....KSSSSSSGGKKKKGGSSSSSSK.....",
+    "....KSSSSSSGKKKKKKKKGSSSSSSK....",
+    "....KSSWSSGKKKKKKKKKKGSSSSSK....",
+    "....KSSWSGKLLLLKKKLLLLLSSGSK....",
+    "....KSSWSGKLKKLKKKLKKKGSSGSK....",
+    "....KSSWGKKLKKLKKKLKKKKGSGSK....",
+    "....KSSWGKKLKKLKLKLKKKKGSGSK....",
+    "....KSSWGKKLKKLKLKLKKKKGSGSK....",
+    "....KSSWGKKLKKLKLKLKKKKGSGSK....",
+    "....KSSWSGKLKKLKLKLKKKGSSGSK....",
+    "....KSSWSLLLKKLLLLLKKKGSSGSK....",
+    "....KSSWSSGKKKKKKKKKKGSSSGSK....",
+    "....KSSWSSSGKKKKKKKKGSSSSSSK....",
+    ".....KSSSSSSGGKKKKGGSSSSSSK.....",
+    "......KSSSSSSSGGGGSSSSSSSK......",
+    ".......KKKKKKKKKKKKKKKKKK.......",
+]
 
-
-def scaled(art, factor):
-    out = []
-    for row in art:
-        wide = "".join(ch * factor for ch in row)
-        out.extend([wide] * factor)
-    return out
+COLOURS = {"K": 0, "r": 1, "S": 7, "G": 8, "R": 9, "L": 10, "W": 15}
 
 
 def ico_image(art):
@@ -121,9 +152,11 @@ def write_png(path, art):
 
 
 def main(outdir):
-    for row in ART16:
-        assert len(row) == 16, row
-    art32 = scaled(ART16, 2)
+    for art, size in ((ART16, 16), (ART32, 32)):
+        assert len(art) == size, size
+        for row in art:
+            assert len(row) == size, row
+    art32 = ART32
     os.makedirs(outdir, exist_ok=True)
     write_ico(os.path.join(outdir, "gwtray.ico"), [ART16, art32])
     write_png(os.path.join(outdir, "gwtray.png"), art32)

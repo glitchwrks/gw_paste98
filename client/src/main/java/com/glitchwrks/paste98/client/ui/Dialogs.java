@@ -15,6 +15,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -163,6 +164,16 @@ public final class Dialogs {
 
     public static void info(Component parent, String title, String text) {
         message(parent, title, text, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /** An information message with its own icon (null for the standard one). */
+    public static void info(Component parent, String title, Icon icon, String text) {
+        if (icon == null) {
+            info(parent, title, text);
+        } else {
+            JOptionPane.showMessageDialog(parent, wrap(text), TITLE + " - " + title, JOptionPane.INFORMATION_MESSAGE,
+                    icon);
+        }
     }
 
     public static void error(Component parent, String title, String text) {

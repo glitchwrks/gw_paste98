@@ -18,6 +18,9 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.net.URL;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
 import com.glitchwrks.paste98.api.ContentCheck;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
@@ -325,7 +328,9 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
     }
 
     private void showAbout() {
-        Dialogs.info(parent(), "About", Version.NAME + " " + Version.VERSION
+        URL png = Controller.class.getResource("gwabout.png");
+        Icon logo = png == null ? null : new ImageIcon(png);
+        Dialogs.info(parent(), "About", logo, Version.NAME + " " + Version.VERSION
                 + "\nA Windows 98 client for the Glitch Works pastes service."
                 + "\n\nEncryption: TLS 1.2 by Bouncy Castle, server authenticated by a pinned key."
                 + "\nJava " + System.getProperty("java.version") + " on " + System.getProperty("os.name") + " "

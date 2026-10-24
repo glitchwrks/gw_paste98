@@ -9,7 +9,9 @@ tray API (`java.awt.SystemTray` arrived in Java 6).
 | `include/win32/jni_md.h` | 32-bit Windows JNI types, for cross-compiling against a Linux JDK's `jni.h` |
 | `build.sh` | Builds `prebuilt/gwtray.dll` with Zig's clang and lld, then runs `check_pe.py` |
 | `check_pe.py` | Checks the DLL is loadable on Windows 98 by a Pentium-class CPU |
-| `make_icon.py` | Generates `prebuilt/gwtray.ico` (16-colour, 16x16 and 32x32) and `prebuilt/gwtray.png` |
+| `make_icon.py` | Generates `prebuilt/gwtray.ico` (16-colour, 16x16 and 32x32, each hand-drawn pixel art) and `prebuilt/gwtray.png`; no dependencies |
+| `make_logo.py` | Draws the large full-colour icon, `prebuilt/gwabout.png` (64x64, the About window) and `prebuilt/gwpaste128.png`; needs Pillow |
+| `art/glitchworks-logo.png` | The Glitch Works badge (www.glitchwrks.com favicon art, 256x256), used as the jar's label |
 | `prebuilt/` | Committed outputs, so the Maven build does not need Zig |
 
 ## Windows 98 constraints
@@ -40,5 +42,6 @@ if Explorer restarts (`TaskbarCreated`).
     pip install ziglang==0.13.0 pefile capstone
     JAVA_HOME=/path/to/any/jdk native/build.sh
     python3 native/make_icon.py native/prebuilt     # only if the icon art changes
+    python3 native/make_logo.py native/prebuilt     # only if the large icon changes
 
 Rebuilds are byte-identical (`/Brepro`).

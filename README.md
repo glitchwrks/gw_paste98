@@ -177,6 +177,11 @@ Workshop's layout with CRLF line endings. 0.6.2 is verified on the T22:
 upgrade over 0.5.1/0.6.x with settings kept, and the help's Contents, Index
 and per-tab Help buttons.
 
+0.7.0 replaces the clipboard icon with a paste jar, its lid askew, labelled
+with the Glitch Works badge: hand-drawn 16-colour pixel art at 16x16 and
+32x32 for the tray (`native/make_icon.py`), and a full-colour 64x64 version
+in the About window (`native/make_logo.py`).
+
 ## Licence
 
 Copyright (C) 2026 Glitch Works, LLC. GNU General Public License v3 or later;
