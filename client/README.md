@@ -37,7 +37,8 @@ Install Java 5 first (the 1.5.0_22 runtime is the last update for Windows 98).
    and installs to `C:\Program Files\gw_paste98`, with a **gw_paste98** folder
    in the Start Menu (the program, its help and the uninstaller). Tick **Start with Windows** if you want it to start
    with Windows (it is off unless an earlier install had it on).
-2. Start it from the last page of setup or from the Start Menu. A clipboard
+2. Press **Close** at the end of setup; the program starts if **Start
+   gw_paste98 when setup closes** was ticked, or start it from the Start Menu. A clipboard
    icon appears in the notification area, and the Settings window opens.
 3. Enter the server's key pin (next section) and press OK.
 

@@ -59,8 +59,7 @@ Var FAILED     ; names of shortcuts or files that could not be created
 !define MUI_ICON "${STAGE}\GWTRAY.ICO"
 !define MUI_UNICON "${STAGE}\GWTRAY.ICO"
 !define MUI_ABORTWARNING
-; Leave the log on screen after installing; right-click it to copy it.
-!define MUI_FINISHPAGE_NOAUTOCLOSE
+; Leave the log on screen after (un)installing; right-click it to copy it.
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 ShowInstDetails show
 ShowUninstDetails show
@@ -78,13 +77,10 @@ ShowUninstDetails show
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 
-!define MUI_FINISHPAGE_RUN
-!define MUI_FINISHPAGE_RUN_TEXT "Start ${APP} now"
-!define MUI_FINISHPAGE_RUN_FUNCTION StartProgram
-!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\GWPASTE.CHM"
-!define MUI_FINISHPAGE_SHOWREADME_TEXT "Open the help"
-!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!insertmacro MUI_PAGE_FINISH
+; No Finish page: on Windows 98 (ThinkPad T22, 0.6.0) moving from the log to
+; MUI2's Finish page crashed Windows with a fatal exception 0E in the ENABLE
+; VxD, with or without its checkboxes. Setup ends on the log page instead, and
+; "Start gw_paste98 when setup closes" replaces the Finish page's Run box.
 
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
@@ -269,6 +265,10 @@ Section /o "Start with Windows" SecStartup
 SectionEnd
 
 ; Upgrading: remove shortcuts for options now left unticked.
+Section "Start ${APP} when setup closes" SecRun
+  ; Done in .onInstSuccess, when you press Close.
+SectionEnd
+
 Section "-Remove unselected shortcuts"
   ${IfNot} ${SectionIsSelected} ${SecStartup}
     Delete "${STARTUP_LNK}"
@@ -308,6 +308,13 @@ Function .onInit
   ; Upgrading: keep an existing "Start with Windows" choice.
   ${If} ${FileExists} "${STARTUP_LNK}"
     !insertmacro SelectSection ${SecStartup}
+  ${EndIf}
+FunctionEnd
+
+Function .onInstSuccess
+  ${IfNot} ${Silent}
+  ${AndIf} ${SectionIsSelected} ${SecRun}
+    Call StartProgram
   ${EndIf}
 FunctionEnd
 

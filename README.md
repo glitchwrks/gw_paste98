@@ -168,7 +168,10 @@ Windows 9x.
 
 0.6.0 adds the help file (`GWPASTE.CHM`), opened from the tray menu, the
 Settings window and the Start Menu, replacing the installed `README.TXT`.
-Its upgrade over 0.5.1 is tested under Wine; it still needs a run on the T22.
+On the T22, 0.6.0's installer crashed Windows (fatal exception 0E in the
+ENABLE VxD) on moving to its Finish page, with or without the page's
+checkboxes; 0.6.1 has no Finish page and offers "Start gw_paste98 when setup
+closes" on the components page instead.
 
 ## Licence
 
