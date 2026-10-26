@@ -1,11 +1,14 @@
 <html><head><title>How the connection is secured</title><link rel="stylesheet" href="style.css"></head><body>
 <h1>How the connection is secured</h1>
-<p>Java 5's own encryption support stops at TLS 1.0 and trusts a list of certificate authorities from 2009, so a modern server cannot be reached with it. gw_paste98 carries its own:</p>
+<p>The encryption support in Java 1.3 to 5 stops at TLS 1.0 (Java 1.3 has none built in at all) and trusts certificate authorities long since replaced, so a modern server cannot be reached with it. gw_paste98 carries its own:</p>
 <ul>
-<li><b>TLS 1.2 from Bouncy Castle.</b> The encryption code is built into <code>GWPASTE.JAR</code>, so Java 5's outdated TLS support and certificate list are not used at all.</li>
+<li><b>TLS 1.2 from Bouncy Castle.</b> The encryption code is built into <code>GWPASTE.JAR</code>, so Java's outdated TLS support and certificate list are not used at all.</li>
 <li><b>A pinned server key instead of certificate authorities.</b> The program talks only to a server whose public key matches one of the <a href="keypin.htm">key pins</a> in Settings. Let's Encrypt certificate renewals make no difference, as long as the server keeps the same key.</li>
 <li><b>Modern ciphers.</b> ChaCha20-Poly1305 or AES-GCM, with X25519 or P-256 key exchange. See <a href="set_connection.htm">Connection settings</a>.</li>
 </ul>
+
+<h2>Random numbers</h2>
+<p>Encryption keys need unpredictable random numbers. Java 1.3 makes its own by timing threads, which takes over half a minute on a Pentium-class machine, so the program gathers them instead from Windows' cryptographic random number generator (through <code>GWTRAY.DLL</code>), the seed file <code>PASTE98.RND</code> saved at the last exit, Java's own generator on Java 5, and timing measurements, all mixed with SHA-256. <span class="ui">Status</span> shows which sources were used. Windows 95 without Internet Explorer 3.02 or later has no cryptographic generator; the seed file and timing still apply.</p>
 
 <h2>Your password</h2>
 <p>The program asks for your pastes password the first time you send, and keeps it in memory only, until you exit. It is never written to disk, exported or logged. Changing the server's host or port logs you out, so the password is never sent to a different server.</p>

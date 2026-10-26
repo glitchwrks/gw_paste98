@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -8,6 +8,8 @@
  * any later version. See the LICENSE file for details.
  */
 package com.glitchwrks.paste98.api;
+
+import com.glitchwrks.paste98.compat13.Causes;
 
 /** A paste could not be created. {@link #getKind()} says why, for the UI to explain. */
 public final class PasteException extends Exception {
@@ -49,7 +51,7 @@ public final class PasteException extends Exception {
 
     public PasteException(Kind kind, String message, Throwable cause) {
         super(message);
-        initCause(cause);
+        Causes.initCause(this, cause);
         this.kind = kind;
     }
 

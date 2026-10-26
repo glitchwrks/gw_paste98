@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -49,9 +49,9 @@ import java.util.TreeSet;
  * to the .BAK name; if the program stops between the two renames, the next
  * load falls back to the .BAK file.
  *
- * All methods are synchronized on the store. Callers (FileNode) may hold an
- * AbstractPreferences node lock when calling in, but the store never takes a
- * node lock, so the lock order is always node, then store.
+ * All methods are synchronized on the store. (Until 0.7 this was the backend
+ * of a java.util.prefs implementation; Java 1.3 has no java.util.prefs, so
+ * SettingsFile now uses it directly. The file format is unchanged.)
  */
 final class FileStore {
 
@@ -63,7 +63,7 @@ final class FileStore {
     private final String description;
 
     /** Node path ("/" or "/a/b") to its key/value map. Every existing node has an entry. */
-    private Map<String, Map<String, String>> nodes = new HashMap<String, Map<String, String>>();
+    private Map nodes = new HashMap();
     private boolean dirty;
     private long loadedModified = -1;
     private long loadedLength = -1;
@@ -73,7 +73,7 @@ final class FileStore {
         this.tempFile = sibling(file, "$$$");
         this.backupFile = sibling(file, "BAK");
         this.description = description;
-        nodes.put("/", new HashMap<String, String>());
+        nodes.put("/", new HashMap());
         load();
     }
 
@@ -84,12 +84,12 @@ final class FileStore {
     // ---- node data -----------------------------------------------------------
 
     synchronized String get(String path, String key) {
-        Map<String, String> m = nodes.get(path);
-        return m == null ? null : m.get(key);
+        Map m = (Map) nodes.get(path);
+        return m == null ? null : (String) m.get(key);
     }
 
     synchronized void put(String path, String key, String value) {
-        Map<String, String> m = ensure(path);
+        Map m = ensure(path);
         if (!value.equals(m.get(key))) {
             m.put(key, value);
             dirty = true;
@@ -97,20 +97,20 @@ final class FileStore {
     }
 
     synchronized void remove(String path, String key) {
-        Map<String, String> m = nodes.get(path);
+        Map m = (Map) nodes.get(path);
         if (m != null && m.remove(key) != null) {
             dirty = true;
         }
     }
 
     synchronized String[] keys(String path) {
-        Map<String, String> m = nodes.get(path);
+        Map m = (Map) nodes.get(path);
         if (m == null) {
             return new String[0];
         }
-        List<String> l = new ArrayList<String>(m.keySet());
+        List l = new ArrayList(m.keySet());
         Collections.sort(l);
-        return l.toArray(new String[l.size()]);
+        return (String[]) l.toArray(new String[l.size()]);
     }
 
     synchronized boolean exists(String path) {
@@ -125,16 +125,16 @@ final class FileStore {
     /** Names of the direct children of path. */
     synchronized String[] children(String path) {
         String prefix = path.equals("/") ? "/" : path + "/";
-        TreeSet<String> names = new TreeSet<String>();
-        for (Iterator<String> it = nodes.keySet().iterator(); it.hasNext();) {
-            String p = it.next();
+        TreeSet names = new TreeSet();
+        for (Iterator it = nodes.keySet().iterator(); it.hasNext();) {
+            String p = (String) it.next();
             if (p.length() > prefix.length() && p.startsWith(prefix)) {
                 String rest = p.substring(prefix.length());
                 int slash = rest.indexOf('/');
                 names.add(slash < 0 ? rest : rest.substring(0, slash));
             }
         }
-        return names.toArray(new String[names.size()]);
+        return (String[]) names.toArray(new String[names.size()]);
     }
 
     /** Removes one node. AbstractPreferences removes the children first. */
@@ -144,13 +144,13 @@ final class FileStore {
         }
     }
 
-    private Map<String, String> ensure(String path) {
-        Map<String, String> m = nodes.get(path);
+    private Map ensure(String path) {
+        Map m = (Map) nodes.get(path);
         if (m == null) {
             if (!path.equals("/")) {
                 ensure(parentOf(path));
             }
-            m = new HashMap<String, String>();
+            m = new HashMap();
             nodes.put(path, m);
             dirty = true;
         }
@@ -190,8 +190,8 @@ final class FileStore {
 
     private void load() {
         File source = file.isFile() ? file : (backupFile.isFile() ? backupFile : null);
-        Map<String, Map<String, String>> fresh = new HashMap<String, Map<String, String>>();
-        fresh.put("/", new HashMap<String, String>());
+        Map fresh = new HashMap();
+        fresh.put("/", new HashMap());
         if (source == null) {
             nodes = fresh;
             loadedModified = -1;
@@ -212,7 +212,7 @@ final class FileStore {
             warn("cannot read " + source + ": " + e);
             return;
         }
-        for (Enumeration<?> en = p.propertyNames(); en.hasMoreElements();) {
+        for (Enumeration en = p.propertyNames(); en.hasMoreElements();) {
             String line = (String) en.nextElement();
             int slash = line.lastIndexOf('/');
             if (slash < 0) {
@@ -225,7 +225,7 @@ final class FileStore {
                 warn("ignoring malformed entry in " + source + ": " + line);
                 continue;
             }
-            Map<String, String> m = ensureIn(fresh, path);
+            Map m = ensureIn(fresh, path);
             if (!rawKey.equals(EMPTY_NODE_MARKER)) {
                 String key = unescape(rawKey);
                 if (key == null) {
@@ -241,33 +241,33 @@ final class FileStore {
         dirty = !source.equals(file); // recovered from .BAK: write it back under the real name
     }
 
-    private static Map<String, String> ensureIn(Map<String, Map<String, String>> map, String path) {
-        Map<String, String> m = map.get(path);
+    private static Map ensureIn(Map map, String path) {
+        Map m = (Map) map.get(path);
         if (m == null) {
             if (!path.equals("/")) {
                 ensureIn(map, parentOf(path));
             }
-            m = new HashMap<String, String>();
+            m = new HashMap();
             map.put(path, m);
         }
         return m;
     }
 
     private void save() throws IOException {
-        TreeMap<String, String> lines = new TreeMap<String, String>();
-        for (Iterator<Map.Entry<String, Map<String, String>>> it = nodes.entrySet().iterator(); it.hasNext();) {
-            Map.Entry<String, Map<String, String>> e = it.next();
-            String path = encodePath(e.getKey());
-            Map<String, String> m = e.getValue();
+        TreeMap lines = new TreeMap();
+        for (Iterator it = nodes.entrySet().iterator(); it.hasNext();) {
+            Map.Entry e = (Map.Entry) it.next();
+            String path = encodePath((String) e.getKey());
+            Map m = (Map) e.getValue();
             if (m.isEmpty()) {
-                if (!e.getKey().equals("/") && !hasChildren(e.getKey())) {
+                if (!e.getKey().equals("/") && !hasChildren((String) e.getKey())) {
                     lines.put(path + "/" + EMPTY_NODE_MARKER, "");
                 }
                 continue;
             }
-            for (Iterator<Map.Entry<String, String>> kv = m.entrySet().iterator(); kv.hasNext();) {
-                Map.Entry<String, String> k = kv.next();
-                lines.put(path + "/" + escape(k.getKey()), k.getValue());
+            for (Iterator kv = m.entrySet().iterator(); kv.hasNext();) {
+                Map.Entry k = (Map.Entry) kv.next();
+                lines.put(path + "/" + escape((String) k.getKey()), k.getValue());
             }
         }
 
@@ -280,11 +280,11 @@ final class FileStore {
             Writer w = new OutputStreamWriter(out, "ISO-8859-1");
             w.write("# " + description + "\r\n");
             w.write("# Written by the program: change settings with its Settings dialog.\r\n");
-            for (Iterator<Map.Entry<String, String>> it = lines.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, String> e = it.next();
-                w.write(PropertiesSyntax.escapeKey(e.getKey()));
+            for (Iterator it = lines.entrySet().iterator(); it.hasNext();) {
+                Map.Entry e = (Map.Entry) it.next();
+                w.write(PropertiesSyntax.escapeKey((String) e.getKey()));
                 w.write('=');
-                w.write(PropertiesSyntax.escapeValue(e.getValue()));
+                w.write(PropertiesSyntax.escapeValue((String) e.getValue()));
                 w.write("\r\n");
             }
             w.flush();
@@ -320,13 +320,21 @@ final class FileStore {
         if (path.equals("/")) {
             return "";
         }
-        StringBuilder sb = new StringBuilder();
-        String[] parts = path.substring(1).split("/", -1);
+        StringBuffer sb = new StringBuffer();
+        String[] parts = splitSlash(path.substring(1));
         for (int i = 0; i < parts.length; i++) {
             if (i > 0) {
                 sb.append('/');
             }
-            sb.append(parts[i].replaceAll("%", "%25"));
+            String part = parts[i];
+            for (int j = 0; j < part.length(); j++) {
+                char c = part.charAt(j);
+                if (c == '%') {
+                    sb.append("%25");
+                } else {
+                    sb.append(c);
+                }
+            }
         }
         return sb.toString();
     }
@@ -336,8 +344,8 @@ final class FileStore {
         if (s.length() == 0) {
             return "/";
         }
-        StringBuilder sb = new StringBuilder();
-        String[] parts = s.split("/", -1);
+        StringBuffer sb = new StringBuffer();
+        String[] parts = splitSlash(s);
         for (int i = 0; i < parts.length; i++) {
             String name = unescape(parts[i]);
             if (name == null || name.length() == 0) {
@@ -348,8 +356,21 @@ final class FileStore {
         return sb.toString();
     }
 
+    /** s split at every '/', keeping empty parts (String.split is Java 1.4). */
+    static String[] splitSlash(String s) {
+        List parts = new ArrayList();
+        int start = 0;
+        for (int i = 0; i <= s.length(); i++) {
+            if (i == s.length() || s.charAt(i) == '/') {
+                parts.add(s.substring(start, i));
+                start = i + 1;
+            }
+        }
+        return (String[]) parts.toArray(new String[parts.size()]);
+    }
+
     static String escape(String key) {
-        StringBuilder sb = new StringBuilder(key.length());
+        StringBuffer sb = new StringBuffer(key.length());
         for (int i = 0; i < key.length(); i++) {
             char c = key.charAt(i);
             if (c == '%') {
@@ -365,7 +386,7 @@ final class FileStore {
 
     /** Decodes %25 and %2F; null on any other '%' sequence. */
     static String unescape(String s) {
-        StringBuilder sb = new StringBuilder(s.length());
+        StringBuffer sb = new StringBuffer(s.length());
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c != '%') {
@@ -401,7 +422,7 @@ final class FileStore {
         }
         BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "ISO-8859-1"));
         try {
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             String line;
             while ((line = r.readLine()) != null) {
                 sb.append(line).append('\n');

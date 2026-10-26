@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +84,9 @@ public final class SettingsDialog {
     private final SettingsStore store;
     private final JDialog dialog;
     private final JTabbedPane tabs = new JTabbedPane();
-    private final Map<Setting<?>, Field> fields = new LinkedHashMap<Setting<?>, Field>();
+    /** Setting to its Field; fieldOrder keeps the settings in dialog order. */
+    private final Map fields = new HashMap();
+    private final List fieldOrder = new ArrayList();
     private Values result;
 
     private SettingsDialog(Component parent, SettingsStore store, String message) {
@@ -193,16 +195,17 @@ public final class SettingsDialog {
 
     // ---- building ----------------------------------------------------------------
 
-    private JPanel buildSection(List<Setting<?>> settings) {
+    private JPanel buildSection(List settings) {
         JPanel p = new JPanel(new GridBagLayout());
         p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(2, 4, 0, 4);
         int row = 0;
         for (int i = 0; i < settings.size(); i++) {
-            Setting<?> s = settings.get(i);
+            Setting s = (Setting) settings.get(i);
             Field f = fieldFor(s);
             fields.put(s, f);
+            fieldOrder.add(s);
 
             c.gridy = row;
             c.weightx = 0;
@@ -261,20 +264,20 @@ public final class SettingsDialog {
      * GridBagLayout fall back to minimum sizes and collapse the input fields.
      */
     static JComponent helpText(String text) {
-        JLabel l = new JLabel("<html>" + escapeHtml(wrap(text, 64)).replaceAll("\n", "<br>") + "</html>");
+        JLabel l = new JLabel("<html>" + replace(escapeHtml(wrap(text, 64)), "\n", "<br>") + "</html>");
         Font f = l.getFont();
         l.setFont(f.deriveFont(Font.PLAIN, Math.max(9f, f.getSize2D() - 1f)));
-        l.setForeground(Color.DARK_GRAY);
+        l.setForeground(Color.darkGray);
         return l;
     }
 
     /** Breaks text into lines of at most width characters, at spaces. */
     static String wrap(String text, int width) {
-        StringBuilder out = new StringBuilder();
+        StringBuffer out = new StringBuffer();
         int lineLength = 0;
-        String[] words = text.split(" ");
-        for (int i = 0; i < words.length; i++) {
-            String w = words[i];
+        java.util.StringTokenizer words = new java.util.StringTokenizer(text, " ");
+        while (words.hasMoreTokens()) {
+            String w = words.nextToken();
             if (lineLength > 0 && lineLength + 1 + w.length() > width) {
                 out.append('\n');
                 lineLength = 0;
@@ -289,7 +292,23 @@ public final class SettingsDialog {
     }
 
     private static String escapeHtml(String s) {
-        return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+        return replace(replace(replace(s, "&", "&amp;"), "<", "&lt;"), ">", "&gt;");
+    }
+
+    /** Replaces every occurrence of from (String.replace(CharSequence...) is Java 5). */
+    static String replace(String s, String from, String to) {
+        StringBuffer sb = new StringBuffer();
+        int start = 0;
+        int i;
+        while ((i = s.indexOf(from, start)) >= 0) {
+            sb.append(s.substring(start, i)).append(to);
+            start = i + from.length();
+        }
+        return sb.append(s.substring(start)).toString();
+    }
+
+    private Field field(Setting s) {
+        return (Field) fields.get(s);
     }
 
     /** Never let GridBagLayout shrink an input below its natural size. */
@@ -297,7 +316,7 @@ public final class SettingsDialog {
         c.setMinimumSize(c.getPreferredSize());
     }
 
-    private Field fieldFor(Setting<?> s) {
+    private Field fieldFor(Setting s) {
         if (s instanceof Setting.Flag) {
             final JCheckBox box = new JCheckBox(s.getLabel());
             return new Field() {
@@ -416,27 +435,29 @@ public final class SettingsDialog {
     // ---- values ----------------------------------------------------------------
 
     private void load(Values v) {
-        for (Map.Entry<Setting<?>, Field> e : fields.entrySet()) {
-            e.getValue().setText(formatted(e.getKey(), v));
+        for (int i = 0; i < fieldOrder.size(); i++) {
+            Setting s = (Setting) fieldOrder.get(i);
+            field(s).setText(formatted(s, v));
         }
     }
 
-    private static <T> String formatted(Setting<T> s, Values v) {
+    private static String formatted(Setting s, Values v) {
         return s.format(v.get(s));
     }
 
     /** Parses every field; returns the values, or null after reporting problems. */
     private Values collect() {
         Values v = store.current();
-        List<String> problems = new ArrayList<String>();
-        Setting<?> first = null;
-        for (Map.Entry<Setting<?>, Field> e : fields.entrySet()) {
+        List problems = new ArrayList();
+        Setting first = null;
+        for (int i = 0; i < fieldOrder.size(); i++) {
+            Setting s = (Setting) fieldOrder.get(i);
             try {
-                v = withText(v, e.getKey(), e.getValue().text());
+                v = withText(v, s, field(s).text());
             } catch (InvalidSettingException ex) {
                 problems.add(ex.getMessage());
                 if (first == null) {
-                    first = e.getKey();
+                    first = s;
                 }
             }
         }
@@ -444,7 +465,7 @@ public final class SettingsDialog {
             return v;
         }
         selectSetting(first);
-        StringBuilder sb = new StringBuilder("Please correct:\n");
+        StringBuffer sb = new StringBuffer("Please correct:\n");
         for (int i = 0; i < problems.size(); i++) {
             sb.append("\n- ").append(problems.get(i));
         }
@@ -452,17 +473,17 @@ public final class SettingsDialog {
         return null;
     }
 
-    private static <T> Values withText(Values v, Setting<T> s, String text) throws InvalidSettingException {
+    private static Values withText(Values v, Setting s, String text) throws InvalidSettingException {
         return v.with(s, s.parse(text));
     }
 
-    private void selectSetting(Setting<?> s) {
+    private void selectSetting(Setting s) {
         for (int i = 0; i < Settings.SECTIONS.length; i++) {
             if (Settings.SECTIONS[i].equals(s.getSection())) {
                 tabs.setSelectedIndex(i);
             }
         }
-        fields.get(s).focusTarget().requestFocusInWindow();
+        field(s).focusTarget().requestFocus();
     }
 
     private void ok() {
@@ -477,7 +498,7 @@ public final class SettingsDialog {
         }
         try {
             store.save(v);
-        } catch (java.util.prefs.BackingStoreException e) {
+        } catch (IOException e) {
             Log.info("cannot save settings: " + e.getMessage());
             Dialogs.error(dialog, "Settings", "The settings could not be saved: " + e.getMessage());
             return;
@@ -489,8 +510,9 @@ public final class SettingsDialog {
 
     private boolean hasUnsavedChanges() {
         Values saved = store.current();
-        for (Map.Entry<Setting<?>, Field> e : fields.entrySet()) {
-            if (!formatted(e.getKey(), saved).equals(normalised(e.getKey(), e.getValue().text()))) {
+        for (int i = 0; i < fieldOrder.size(); i++) {
+            Setting s = (Setting) fieldOrder.get(i);
+            if (!formatted(s, saved).equals(normalised(s, field(s).text()))) {
                 return true;
             }
         }
@@ -498,7 +520,7 @@ public final class SettingsDialog {
     }
 
     /** Field text in stored form, or the raw text if it does not parse. */
-    private static <T> String normalised(Setting<T> s, String text) {
+    private static String normalised(Setting s, String text) {
         try {
             return s.format(s.parse(text));
         } catch (InvalidSettingException e) {
@@ -516,8 +538,8 @@ public final class SettingsDialog {
     private void fetchPin(final JButton button, final JTextArea pinsArea) {
         final Values target;
         try {
-            target = withText(withText(store.current(), Settings.HOST, fields.get(Settings.HOST).text()),
-                    Settings.PORT, fields.get(Settings.PORT).text());
+            target = withText(withText(store.current(), Settings.HOST, field(Settings.HOST).text()),
+                    Settings.PORT, field(Settings.PORT).text());
         } catch (InvalidSettingException e) {
             selectSetting(e.getSetting());
             Dialogs.error(dialog, "Get pin", e.getMessage());
@@ -564,11 +586,11 @@ public final class SettingsDialog {
     }
 
     private void offerPin(ServerKeyInfo info, JTextArea pinsArea) {
-        List<String> current;
+        List current;
         try {
-            current = Settings.PINS.parse(pinsArea.getText());
+            current = (List) Settings.PINS.parse(pinsArea.getText());
         } catch (InvalidSettingException e) {
-            current = new ArrayList<String>(); // the field has a typo; compare with nothing
+            current = new ArrayList(); // the field has a typo; compare with nothing
         }
         if (!PinVerifyDialog.confirmAdd(dialog, info, current)) {
             return;
@@ -603,7 +625,7 @@ public final class SettingsDialog {
             return;
         }
         load(r.values);
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         sb.append("Read ").append(r.count).append(" settings from ").append(f.getName())
                 .append(". Review them, then press OK to save or Cancel to discard.");
         if (!r.problems.isEmpty()) {
@@ -640,7 +662,7 @@ public final class SettingsDialog {
             } finally {
                 out.close();
             }
-        } catch (Exception e) { // IOException, BackingStoreException
+        } catch (IOException e) {
             Dialogs.error(dialog, "Export", "Cannot write " + f.getName() + ": " + e.getMessage());
             return;
         }
@@ -664,11 +686,11 @@ public final class SettingsDialog {
     }
 
     /** Shows a problem with settings that could not be loaded. */
-    public static void showLoadProblems(Component parent, List<String> problems) {
+    public static void showLoadProblems(Component parent, List problems) {
         if (problems.isEmpty()) {
             return;
         }
-        StringBuilder sb = new StringBuilder("Some saved settings were not valid and the defaults are being used:\n");
+        StringBuffer sb = new StringBuffer("Some saved settings were not valid and the defaults are being used:\n");
         for (int i = 0; i < problems.size(); i++) {
             sb.append("\n- ").append(problems.get(i));
         }

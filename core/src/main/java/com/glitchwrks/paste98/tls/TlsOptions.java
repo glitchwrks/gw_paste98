@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ public final class TlsOptions {
 
     private String host = "pastes.glitchwrks.com";
     private int port = 443;
-    private final List<String> pins = new ArrayList<String>();
+    private final List pins = new ArrayList();
     private String cipher = CIPHER_AUTO;
     private String group = GROUP_AUTO;
     private boolean offerTls13 = false;
@@ -58,7 +58,7 @@ public final class TlsOptions {
     }
 
     /** Pins in normalised form (bare base64). */
-    public List<String> getPins() {
+    public List getPins() {
         return Collections.unmodifiableList(pins);
     }
 

@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -15,6 +15,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.glitchwrks.paste98.compat13.Causes;
+import com.glitchwrks.paste98.compat13.Level;
+import com.glitchwrks.paste98.compat13.Logger;
 
 /**
  * Minimal log to PASTE98.LOG in the application folder (started fresh each
@@ -47,11 +51,31 @@ public final class Log {
         }
     }
 
+    /** Logs the error and its stack trace, with every cause (which Java 1.3 cannot show itself). */
     public static synchronized void error(String msg, Throwable t) {
-        info(msg + ": " + t);
+        info(msg + ": " + Causes.describe(t));
+        String traces = Causes.stackTraces(t);
         if (file != null) {
-            t.printStackTrace(file);
+            file.print(traces);
         }
-        t.printStackTrace();
+        System.err.print(traces);
+    }
+
+    /**
+     * Sends Bouncy Castle's own log messages (its java.util.logging calls,
+     * renamed by the build to compat13.Logger) to this log: INFO and above,
+     * or everything from FINE with -Dpaste98.debug=true.
+     */
+    public static void routeLibraryLogging() {
+        Level lowest = Boolean.getBoolean("paste98.debug") ? Level.FINE : Level.INFO;
+        Logger.setSink(new Logger.Sink() {
+            public void log(String logger, Level level, String message, Throwable thrown) {
+                if (thrown != null) {
+                    error("bc " + level + " " + logger + ": " + message, thrown);
+                } else {
+                    info("bc " + level + " " + logger + ": " + message);
+                }
+            }
+        }, lowest);
     }
 }

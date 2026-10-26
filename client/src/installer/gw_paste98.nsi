@@ -1,4 +1,4 @@
-; gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+; gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
 ; Copyright (C) 2026 Glitch Works, LLC
 ;
 ; This program is free software: you can redistribute it and/or modify it
@@ -114,7 +114,7 @@ ShowUninstDetails show
 
 ; ---- Checks -----------------------------------------------------------------
 
-; Sets $JAVAW to javaw.exe of Java 1.5 or later, or "" if there is none. Tries
+; Sets $JAVAW to javaw.exe of Java 1.3 or later, or "" if there is none. Tries
 ; the registry's CurrentVersion first, then every installed version.
 Function FindJava
   StrCpy $JAVAW ""
@@ -133,15 +133,15 @@ Function FindJava
   done:
 FunctionEnd
 
-; Takes a version key name (e.g. "1.5" or "1.5.0_22") from the stack; sets
-; $JAVAW if it is 1.5 or later and its javaw.exe exists.
+; Takes a version key name (e.g. "1.3" or "1.5.0_22") from the stack; sets
+; $JAVAW if it is 1.3 or later and its javaw.exe exists.
 Function TryJava
   Exch $R0
   Push $R1
   Push $R2
   StrCmp $R0 "" done
-  ${VersionCompare} $R0 "1.5" $R1
-  StrCmp $R1 "2" done ; older than 1.5
+  ${VersionCompare} $R0 "1.3" $R1
+  StrCmp $R1 "2" done ; older than 1.3
   ReadRegStr $R2 HKLM "${JRE_KEY}\$R0" "JavaHome"
   StrCmp $R2 "" done
   IfFileExists "$R2\bin\javaw.exe" 0 done
@@ -208,7 +208,8 @@ Section "${APP} (required)" SecMain
   FileWrite $2 "rem Sends a text file as a paste and prints its address.$\r$\n"
   FileWrite $2 "rem Usage: SENDFILE filename   (written by setup; see the help)$\r$\n"
   FileWrite $2 "if $\"%1$\"==$\"$\" goto usage$\r$\n"
-  FileWrite $2 "$0java.exe ${JAVA_ARGS} $1 --send %1 %2 %3$\r$\n"
+  ; Java 1.3 cannot read environment variables, so the password goes in as a property.
+  FileWrite $2 "$0java.exe -Dpaste98.password=%PASTE98_PASSWORD% ${JAVA_ARGS} $1 --send %1 %2 %3$\r$\n"
   FileWrite $2 "goto end$\r$\n"
   FileWrite $2 ":usage$\r$\n"
   FileWrite $2 "echo Usage: SENDFILE filename$\r$\n"
@@ -295,7 +296,7 @@ Function .onInit
   Call FindJava
   ${If} $JAVAW == ""
     MessageBox MB_OK|MB_ICONSTOP \
-        "${APP} needs Java 5 (1.5) or later, and none was found.$\n$\nInstall the Java 5 runtime (1.5.0_22 is the last update for Windows 98), then run this setup again." \
+        "${APP} needs Java 1.3 or later, and none was found.$\n$\nInstall a Java runtime (1.3.1 is the last for Windows 95; 1.5.0_22 the last for Windows 98), then run this setup again." \
         /SD IDOK
     Abort
   ${EndIf}

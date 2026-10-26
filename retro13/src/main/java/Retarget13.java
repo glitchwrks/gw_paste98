@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -30,6 +30,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LineNumberNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -40,14 +41,16 @@ import org.objectweb.asm.tree.VarInsnNode;
  * Build-time tool (runs on the build JDK, not on Windows): makes Bouncy
  * Castle's Java 1.4 builds (bc*-jdk14) loadable on Java 1.3.
  *
- * The parts of BC this program uses need only two things 1.3 lacks:
- * - java.util.logging (bctls logs at FINE): references are renamed to the
- *   do-nothing stand-ins in com.glitchwrks.paste98.compat13.
+ * The parts of BC this program uses need only three things 1.3 lacks:
+ * - java.util.logging: references are renamed to the stand-ins in
+ *   com.glitchwrks.paste98.compat13 (core module), which pass messages to
+ *   whatever sink the program installs.
  * - javax.security.auth.Destroyable and DestroyFailedException (core only
  *   from 1.4), implemented by BC's private key classes: renamed likewise.
  * - exception causes: x.initCause(c) becomes Causes.initCause(x, c), and
  *   JDK exception constructors taking a cause, X(Throwable) and
- *   X(String, Throwable), become X(String), keeping a message.
+ *   X(String, Throwable), become X(String) bracketed by Causes.stash(c)
+ *   and Causes.attach(x), so the cause is still recorded (Causes.getCause).
  * Every class file is also re-marked as version 47 (Java 1.3). The one
  * bytecode difference that matters: javac 1.4 stores an inner class's outer
  * instance and captured variables before calling the superclass constructor,
@@ -157,6 +160,7 @@ public final class Retarget13 {
             if (m.name.equals("<init>")) {
                 moveEarlyFieldStores(node, m, name);
             }
+            rewriteCauseConstructors(m);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         node.accept(writer);
@@ -231,6 +235,70 @@ public final class Retarget13 {
         movedFieldStores++;
     }
 
+    static final String CAUSES = COMPAT + "Causes";
+
+    /**
+     * Rewrites JDK X(Throwable) and X(String, Throwable) constructor calls to
+     * X(String), stashing the cause before the call and attaching it to the
+     * new exception after it. The new exception is on the stack after the call
+     * for "new X(...)" (javac's NEW, DUP, ..., INVOKESPECIAL), or is "this"
+     * for a constructor's own super(cause) call.
+     */
+    static void rewriteCauseConstructors(MethodNode m) {
+        InsnList code = m.instructions;
+        java.util.ArrayList<Boolean> pendingNew = new java.util.ArrayList<Boolean>(); // true if followed by DUP
+        for (AbstractInsnNode x = code.getFirst(); x != null; x = x.getNext()) {
+            if (x.getOpcode() == Opcodes.NEW) {
+                AbstractInsnNode n = next(x);
+                pendingNew.add(Boolean.valueOf(n != null && n.getOpcode() == Opcodes.DUP));
+                continue;
+            }
+            if (x.getOpcode() != Opcodes.INVOKESPECIAL || !((MethodInsnNode) x).name.equals("<init>")) {
+                continue;
+            }
+            MethodInsnNode call = (MethodInsnNode) x;
+            boolean fromNew = !pendingNew.isEmpty();
+            boolean dup = fromNew && pendingNew.remove(pendingNew.size() - 1).booleanValue();
+            if (!isCauseCtorOwner(call.owner)) {
+                continue;
+            }
+            boolean throwableOnly = call.desc.equals("(Ljava/lang/Throwable;)V");
+            boolean withMessage = call.desc.equals("(Ljava/lang/String;Ljava/lang/Throwable;)V");
+            if (!throwableOnly && !withMessage) {
+                continue;
+            }
+            boolean canAttach = fromNew ? dup : m.name.equals("<init>");
+            InsnList before = new InsnList();
+            if (throwableOnly) {
+                // ..., cause -> ..., cause.toString(), with the cause stashed
+                if (canAttach) {
+                    before.add(new InsnNode(Opcodes.DUP));
+                    before.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAUSES, "stash", "(Ljava/lang/Throwable;)V", false));
+                }
+                before.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAUSES, "message",
+                        "(Ljava/lang/Throwable;)Ljava/lang/String;", false));
+            } else if (canAttach) {
+                // ..., message, cause -> ..., message, with the cause stashed
+                before.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAUSES, "stash", "(Ljava/lang/Throwable;)V", false));
+            } else {
+                before.add(new InsnNode(Opcodes.POP));
+            }
+            code.insertBefore(call, before);
+            call.desc = "(Ljava/lang/String;)V";
+            if (canAttach) {
+                InsnList after = new InsnList();
+                if (fromNew) {
+                    after.add(new InsnNode(Opcodes.DUP));
+                } else {
+                    after.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                }
+                after.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAUSES, "attach", "(Ljava/lang/Throwable;)V", false));
+                code.insert(call, after);
+            }
+            rewrittenCtors++;
+        }
+    }
+
     static AbstractInsnNode next(AbstractInsnNode i) {
         AbstractInsnNode n = i.getNext();
         while (n != null && isMeta(n)) {
@@ -260,23 +328,6 @@ public final class Retarget13 {
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, COMPAT + "Causes", "initCause",
                         "(Ljava/lang/Throwable;Ljava/lang/Throwable;)Ljava/lang/Throwable;", false);
                 return;
-            }
-            if (op == Opcodes.INVOKESPECIAL && name.equals("<init>") && isCauseCtorOwner(owner)) {
-                if (desc.equals("(Ljava/lang/Throwable;)V")) {
-                    // stack: ..., uninitialised, cause  ->  ..., uninitialised, cause.toString()
-                    rewrittenCtors++;
-                    super.visitMethodInsn(Opcodes.INVOKESTATIC, COMPAT + "Causes", "message",
-                            "(Ljava/lang/Throwable;)Ljava/lang/String;", false);
-                    super.visitMethodInsn(op, owner, name, "(Ljava/lang/String;)V", false);
-                    return;
-                }
-                if (desc.equals("(Ljava/lang/String;Ljava/lang/Throwable;)V")) {
-                    // stack: ..., uninitialised, message, cause  ->  ..., uninitialised, message
-                    rewrittenCtors++;
-                    super.visitInsn(Opcodes.POP);
-                    super.visitMethodInsn(op, owner, name, "(Ljava/lang/String;)V", false);
-                    return;
-                }
             }
             super.visitMethodInsn(op, owner, name, desc, itf);
         }

@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -10,7 +10,6 @@
 package com.glitchwrks.paste98.tls;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import org.bouncycastle.tls.TlsClientProtocol;
@@ -39,11 +38,10 @@ public final class PinFetcher {
      * @throws IOException if the server cannot be reached or did not send a certificate
      */
     public static ServerKeyInfo fetch(TlsOptions options) throws IOException {
-        Socket socket = new Socket();
         PinnedTlsClient client = new PinnedTlsClient(PinnedConnection.crypto(), options, false, null);
         client.setCaptureOnly(true);
+        Socket socket = Sockets.connect(options.getHost(), options.getPort(), options.getTimeoutMs());
         try {
-            socket.connect(new InetSocketAddress(options.getHost(), options.getPort()), options.getTimeoutMs());
             socket.setSoTimeout(options.getTimeoutMs());
             TlsClientProtocol protocol = new TlsClientProtocol(socket.getInputStream(), socket.getOutputStream());
             try {

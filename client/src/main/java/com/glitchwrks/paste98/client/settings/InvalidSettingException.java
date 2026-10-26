@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -14,14 +14,14 @@ public final class InvalidSettingException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    private final transient Setting<?> setting;
+    private final transient Setting setting;
 
-    InvalidSettingException(Setting<?> setting, String message) {
+    InvalidSettingException(Setting setting, String message) {
         super(message);
         this.setting = setting;
     }
 
-    public Setting<?> getSetting() {
+    public Setting getSetting() {
         return setting;
     }
 }

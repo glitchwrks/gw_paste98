@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -61,7 +61,7 @@ public final class Help {
         } catch (IOException e) {
             Log.info("help: cannot start hh.exe: " + e.getMessage());
             Dialogs.error(parent, "Help", "Cannot start the HTML Help viewer (hh.exe): " + e.getMessage()
-                    + "\n\nIt comes with Windows 98 and Internet Explorer 4 or later. The help file is:\n"
+                    + "\n\nIt comes with Windows 98, and with Internet Explorer 4 or later on Windows 95. The help file is:\n"
                     + chm.getPath());
         }
     }

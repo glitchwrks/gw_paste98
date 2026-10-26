@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -30,7 +30,7 @@ final class PropertiesSyntax {
     }
 
     private static String escape(String s, boolean key) {
-        StringBuilder sb = new StringBuilder(s.length() + 8);
+        StringBuffer sb = new StringBuffer(s.length() + 8);
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {

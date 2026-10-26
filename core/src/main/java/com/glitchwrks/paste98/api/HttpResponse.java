@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -27,10 +27,10 @@ public final class HttpResponse {
     private static final int MAX_LINE = 8192;
 
     private final int status;
-    private final Map<String, String> headers;
+    private final Map headers;
     private final byte[] body;
 
-    private HttpResponse(int status, Map<String, String> headers, byte[] body) {
+    private HttpResponse(int status, Map headers, byte[] body) {
         this.status = status;
         this.headers = headers;
         this.body = body;
@@ -42,7 +42,7 @@ public final class HttpResponse {
 
     /** Header value by case-insensitive name, or null. */
     public String getHeader(String name) {
-        return headers.get(name.toLowerCase());
+        return (String) headers.get(name.toLowerCase());
     }
 
     public String getBodyText() {
@@ -59,7 +59,7 @@ public final class HttpResponse {
             throw new IOException("server closed the connection without a response");
         }
         int status = parseStatus(statusLine);
-        Map<String, String> headers = new HashMap<String, String>();
+        Map headers = new HashMap();
         String line;
         while ((line = readLine(in)) != null && line.length() > 0) {
             int colon = line.indexOf(':');
@@ -68,8 +68,8 @@ public final class HttpResponse {
             }
         }
         byte[] body;
-        String te = headers.get("transfer-encoding");
-        String cl = headers.get("content-length");
+        String te = (String) headers.get("transfer-encoding");
+        String cl = (String) headers.get("content-length");
         if (te != null && te.toLowerCase().indexOf("chunked") >= 0) {
             body = readChunked(in);
         } else if (cl != null) {
@@ -107,7 +107,7 @@ public final class HttpResponse {
 
     /** Reads a CRLF- or LF-terminated line as ISO-8859-1; null at end of stream. */
     private static String readLine(InputStream in) throws IOException {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         int b;
         boolean any = false;
         while ((b = in.read()) >= 0) {

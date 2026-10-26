@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.glitchwrks.paste98</groupId>
+    <artifactId>gw_paste98-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <!--
+    Build-time tools (run on the build JDK, never shipped): Retarget13 adapts
+    Bouncy Castle's Java 1.4 builds to Java 1.3, and Check13 verifies a
+    finished jar against Java 1.3. Used by the client and pastebench13 builds.
+  -->
+  <artifactId>gw_paste98-retro13</artifactId>
+  <name>gw_paste98 Java 1.3 build tools</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-commons</artifactId>
+      <version>${asm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>animal-sniffer</artifactId>
+      <version>${animal-sniffer.version}</version>
+    </dependency>
+    <!-- Tests run retargeted code against the compat13 classes in core. -->
+    <dependency>
+      <groupId>com.glitchwrks.paste98</groupId>
+      <artifactId>gw_paste98-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <testSource>1.8</testSource>
+          <testTarget>1.8</testTarget>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -21,7 +21,7 @@ import com.glitchwrks.paste98.tls.TlsOptions;
  * saving, validation and XML import are all driven by this list, so adding a
  * parameter means adding one declaration here (and using it).
  *
- * Stored under the java.util.prefs node {@link #NODE}.
+ * Stored under the node {@link #NODE} of the settings file (PASTE98.PRF).
  */
 public final class Settings {
 
@@ -101,12 +101,12 @@ public final class Settings {
                     + "installed, otherwise Arial. Changes apply as soon as you press OK.",
             Appearance.METAL_STEEL,
             new String[] { Appearance.METAL_STEEL, Appearance.METAL_OCEAN, Appearance.WINDOWS },
-            new String[] { "Java Metal, classic (Steel)", "Java Metal, Ocean (Java 5 default)", "Windows" });
+            new String[] { "Java Metal, classic (Steel)", "Java Metal, Ocean (needs Java 5)", "Windows" });
 
-    private static final List<Setting<?>> ALL;
+    private static final List ALL;
 
     static {
-        List<Setting<?>> l = new ArrayList<Setting<?>>();
+        List l = new ArrayList();
         l.add(HOST);
         l.add(PORT);
         l.add(PINS);
@@ -126,15 +126,15 @@ public final class Settings {
     }
 
     /** All settings, in dialog order. */
-    public static List<Setting<?>> all() {
+    public static List all() {
         return ALL;
     }
 
     /** Settings in one dialog tab, in order. */
-    public static List<Setting<?>> inSection(String section) {
-        List<Setting<?>> l = new ArrayList<Setting<?>>();
+    public static List inSection(String section) {
+        List l = new ArrayList();
         for (int i = 0; i < ALL.size(); i++) {
-            if (ALL.get(i).getSection().equals(section)) {
+            if (((Setting) ALL.get(i)).getSection().equals(section)) {
                 l.add(ALL.get(i));
             }
         }
@@ -142,10 +142,10 @@ public final class Settings {
     }
 
     /** Looks a setting up by key; null if unknown. */
-    public static Setting<?> byKey(String key) {
+    public static Setting byKey(String key) {
         for (int i = 0; i < ALL.size(); i++) {
-            if (ALL.get(i).getKey().equals(key)) {
-                return ALL.get(i);
+            if (((Setting) ALL.get(i)).getKey().equals(key)) {
+                return (Setting) ALL.get(i);
             }
         }
         return null;

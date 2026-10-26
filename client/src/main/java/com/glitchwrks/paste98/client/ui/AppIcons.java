@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -98,7 +98,7 @@ public final class AppIcons {
         try {
             // sun.awt.shell.ShellFolder.getIcon(true) gives the 32x32 icon on Java 5;
             // reflection, as it is not a public API.
-            Class<?> c = Class.forName("sun.awt.shell.ShellFolder");
+            Class c = Class.forName("sun.awt.shell.ShellFolder");
             Object folder = c.getMethod("getShellFolder", new Class[] { File.class }).invoke(null,
                     new Object[] { f });
             Object image = c.getMethod("getIcon", new Class[] { Boolean.TYPE }).invoke(folder,
@@ -110,7 +110,11 @@ public final class AppIcons {
             Log.info("about: no large icon for " + f + " (" + t + ")");
         }
         try {
-            return FileSystemView.getFileSystemView().getSystemIcon(f);
+            // FileSystemView.getSystemIcon (Java 1.4), by name: the program runs on Java 1.3.
+            Object view = FileSystemView.getFileSystemView();
+            Object icon = view.getClass().getMethod("getSystemIcon", new Class[] { File.class }).invoke(view,
+                    new Object[] { f });
+            return (Icon) icon;
         } catch (Throwable t) {
             Log.info("about: no icon for " + f + ": " + t);
             return null;

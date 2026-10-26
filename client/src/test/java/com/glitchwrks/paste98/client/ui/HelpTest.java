@@ -28,9 +28,9 @@ public class HelpTest {
             File page = new File(HELP, topic);
             assertTrue("no help page " + topic + " for the " + Settings.SECTIONS[i] + " tab", page.isFile());
             String html = read(page);
-            List<Setting<?>> settings = Settings.inSection(Settings.SECTIONS[i]);
+            List settings = Settings.inSection(Settings.SECTIONS[i]);
             for (int j = 0; j < settings.size(); j++) {
-                String label = settings.get(j).getLabel();
+                String label = ((Setting) settings.get(j)).getLabel();
                 assertTrue(topic + " does not mention the setting \"" + label + "\"", html.indexOf(label) >= 0);
             }
         }

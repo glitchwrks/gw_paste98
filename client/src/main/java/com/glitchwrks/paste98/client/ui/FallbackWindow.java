@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -87,7 +87,7 @@ public final class FallbackWindow {
         frame.getContentPane().add(south, BorderLayout.SOUTH);
         frame.pack();
         frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
+        Dialogs.center(frame);
     }
 
     /** Receives button presses as label indexes. */
@@ -108,7 +108,7 @@ public final class FallbackWindow {
     }
 
     private static String escape(String s) {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c == '<') {

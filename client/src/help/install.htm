@@ -1,10 +1,10 @@
 <html><head><title>Installing</title><link rel="stylesheet" href="style.css"></head><body>
 <h1>Installing</h1>
-<p>Install Java 5 first. The Java 1.5.0_22 runtime is the last update for Windows 98.</p>
+<p>Install Java first: any Java runtime from 1.3 on. The newest each system can run is Java 1.3.1 on Windows 95 and Java 1.5.0_22 (Java 5) on Windows 98. Java 5 is a little faster and offers the Ocean look; everything else works the same on both.</p>
 
 <h2>With the installer</h2>
 <ol>
-<li>Run <code>gw_paste98-<i>version</i>-setup.exe</code>. It finds Java 5 through the registry and refuses to continue without it.</li>
+<li>Run <code>gw_paste98-<i>version</i>-setup.exe</code>. It finds Java (1.3 or later) through the registry and refuses to continue without it. With several installed, it uses the current version.</li>
 <li>Choose the parts to install:
   <ul>
   <li><span class="ui">Start Menu shortcuts</span>: a <span class="ui">gw_paste98</span> folder with the program, this help and the uninstaller.</li>
@@ -23,7 +23,7 @@
 </ol>
 <p>To start it with Windows, make a shortcut in <code>C:\WINDOWS\Start Menu\Programs\StartUp</code> with the target</p>
 <pre>"C:\Program Files\Java\jre1.5.0_22\bin\javaw.exe" -Xmx32m -jar C:\GW_PASTE98\GWPASTE.JAR</pre>
-<p>adjusting both paths to where Java 5 and the program actually are.</p>
+<p>adjusting both paths to where Java and the program actually are (Java 1.3.1 installs to <code>C:\Program Files\JavaSoft\JRE\1.3.1</code>).</p>
 
 <h2>Upgrading</h2>
 <p>Exit the program (right-click the tray icon and choose <span class="ui">Exit</span>), then run the new setup. Setup will not continue while the program is running, because Windows cannot replace files in use. Your settings and key pins in <code>PASTE98.PRF</code> are kept, and so is your Start with Windows choice.</p>

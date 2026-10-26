@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -45,15 +45,15 @@ public final class ServerKeyInfo {
     private final String keyDescription;
     private final String subject;
     private final String commonName;
-    private final List<String> dnsNames;
-    private final List<String> ipAddresses;
+    private final List dnsNames;
+    private final List ipAddresses;
     private final String issuer;
     private final Date notBefore;
     private final Date notAfter;
     private final int chainLength;
 
     private ServerKeyInfo(String host, int port, String pin, String keyDescription, String subject,
-            String commonName, List<String> dnsNames, List<String> ipAddresses, String issuer, Date notBefore,
+            String commonName, List dnsNames, List ipAddresses, String issuer, Date notBefore,
             Date notAfter, int chainLength) {
         this.host = host;
         this.port = port;
@@ -84,8 +84,8 @@ public final class ServerKeyInfo {
         }
         String pin = SpkiPin.fromCertificate(leafDer);
 
-        List<String> dns = new ArrayList<String>();
-        List<String> ips = new ArrayList<String>();
+        List dns = new ArrayList();
+        List ips = new ArrayList();
         Extensions ext = cert.getTBSCertificate().getExtensions();
         GeneralNames san = ext == null ? null : GeneralNames.fromExtensions(ext, Extension.subjectAlternativeName);
         if (san != null) {
@@ -147,7 +147,7 @@ public final class ServerKeyInfo {
         if (b.length == 4) {
             return (b[0] & 0xff) + "." + (b[1] & 0xff) + "." + (b[2] & 0xff) + "." + (b[3] & 0xff);
         }
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         for (int i = 0; i + 1 < b.length; i += 2) {
             if (i > 0) {
                 sb.append(':');
@@ -169,12 +169,12 @@ public final class ServerKeyInfo {
         if (PinnedTlsClient.isIpLiteral(host)) {
             return ipAddresses.contains(host);
         }
-        List<String> names = dnsNames;
+        List names = dnsNames;
         if (names.isEmpty() && commonName != null) {
             names = Collections.singletonList(commonName);
         }
         for (int i = 0; i < names.size(); i++) {
-            if (hostMatches(names.get(i).toLowerCase(), h)) {
+            if (hostMatches(((String) names.get(i)).toLowerCase(), h)) {
                 return true;
             }
         }
@@ -211,8 +211,8 @@ public final class ServerKeyInfo {
     }
 
     /** DNS names from the subject alternative names, then IP addresses; or the CN if there are none. */
-    public List<String> getNames() {
-        List<String> l = new ArrayList<String>(dnsNames);
+    public List getNames() {
+        List l = new ArrayList(dnsNames);
         l.addAll(ipAddresses);
         if (l.isEmpty() && commonName != null) {
             l.add(commonName);

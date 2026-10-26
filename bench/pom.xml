@@ -24,6 +24,34 @@
   <build>
     <finalName>pastebench</finalName>
     <plugins>
+      <!-- The Java 5 pastebench: Java 5 source, unpatched BC Java 1.4 builds. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>${animal-sniffer.version}</version>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>java15</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check-java5-api</id>
+            <phase>process-classes</phase>
+            <goals><goal>check</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Copy dependency jars next to ours so "java -jar FULL\pastebench.jar" works. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

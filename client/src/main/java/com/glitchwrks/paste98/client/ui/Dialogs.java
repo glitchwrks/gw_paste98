@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -17,6 +17,7 @@ import java.awt.Insets;
 
 import javax.swing.Icon;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,7 +25,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.client.Version;
@@ -87,20 +87,8 @@ public final class Dialogs {
         c.gridwidth = 2;
         p.add(new JLabel("The password is kept in memory only until you exit."), c);
 
-        // Focus the empty field once the dialog is showing.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                if (user.getText().length() > 0) {
-                    pass.requestFocusInWindow();
-                } else {
-                    user.requestFocusInWindow();
-                }
-            }
-        });
-
         while (true) {
-            int r = JOptionPane.showConfirmDialog(parent, p, TITLE + " - log in", JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.PLAIN_MESSAGE);
+            int r = showFocused(parent, p, TITLE + " - log in", user.getText().length() > 0 ? pass : user);
             if (r != JOptionPane.OK_OPTION) {
                 clear(pass);
                 return null;
@@ -115,6 +103,24 @@ public final class Dialogs {
             JOptionPane.showMessageDialog(parent, u.indexOf(':') >= 0 ? "The username cannot contain ':'."
                     : "Enter both a username and a password.", TITLE, JOptionPane.WARNING_MESSAGE);
         }
+    }
+
+    /**
+     * JOptionPane.showConfirmDialog (OK and Cancel) with the keyboard focus in
+     * field. JOptionPane focuses its first button when the dialog opens, by
+     * calling selectInitialValue, so that is where the field takes it.
+     */
+    static int showFocused(Component parent, Object message, String title, final Component field) {
+        JOptionPane pane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION) {
+            public void selectInitialValue() {
+                field.requestFocus();
+            }
+        };
+        JDialog d = pane.createDialog(parent, title);
+        d.setVisible(true); // modal: returns when closed
+        d.dispose();
+        Object v = pane.getValue();
+        return v instanceof Integer ? ((Integer) v).intValue() : JOptionPane.CLOSED_OPTION;
     }
 
     private static void clear(JPasswordField f) {
@@ -236,6 +242,13 @@ public final class Dialogs {
 
     private static void message(Component parent, String title, String text, int type) {
         JOptionPane.showMessageDialog(parent, wrap(text), TITLE + " - " + title, type);
+    }
+
+    /** Centres a window on the screen (Window.setLocationRelativeTo is Java 1.4). */
+    public static void center(java.awt.Window w) {
+        java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        java.awt.Dimension size = w.getSize();
+        w.setLocation(Math.max(0, (screen.width - size.width) / 2), Math.max(0, (screen.height - size.height) / 2));
     }
 
     /** Long messages as a wrapped, read-only text area rather than one wide line. */

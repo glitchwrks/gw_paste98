@@ -1,16 +1,16 @@
 # ProGuard config: shrink pastebench + gw_paste98 core + Bouncy Castle into one small jar.
 #
 # Shrinking only. No obfuscation, optimization or preverification, so the
-# remaining classes are byte-for-byte BC's Java 5 (version 49) class files.
+# remaining classes are byte-for-byte BC's Java 1.4 (version 48) class files, which Java 5 runs as they are.
 # Values in <angle brackets> are system properties passed in by the pom.
 
 -injars  <target.dir>/classes
 -injars  <manifest.dir>(META-INF/MANIFEST.MF)
 # Drop BC's META-INF: its jar signatures would no longer match a merged jar.
 -injars  <lib.dir>/gw_paste98-core-<core.version>.jar(!META-INF/**)
--injars  <lib.dir>/bcprov-jdk15to18-<bc.version>.jar(!META-INF/**)
--injars  <lib.dir>/bctls-jdk15to18-<bc.version>.jar(!META-INF/**)
--injars  <lib.dir>/bcutil-jdk15to18-<bc.version>.jar(!META-INF/**)
+-injars  <lib.dir>/bcprov-jdk14-<bc.version>.jar(!META-INF/**)
+-injars  <lib.dir>/bctls-jdk14-<bc.version>.jar(!META-INF/**)
+-injars  <lib.dir>/bcutil-jdk14-<bc.version>.jar(!META-INF/**)
 -outjars <target.dir>/pastebench-small.jar
 
 # Resolve JDK references against a Java 8 runtime. Java 5's API is a subset;

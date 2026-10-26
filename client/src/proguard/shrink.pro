@@ -1,20 +1,21 @@
 # ProGuard config: shrink the client + gw_paste98 core + Bouncy Castle into GWPASTE.JAR.
 #
-# Shrinking only. No obfuscation, optimization or preverification, so the
-# remaining classes are unchanged Java 5 (version 49) class files.
+# Bouncy Castle comes in already retargeted to Java 1.3 by Retarget13 (see the
+# pom). Shrinking only: no obfuscation, optimization or preverification, so
+# every class keeps version 47 (Java 1.3). Check13 then checks the result.
 # Values in <angle brackets> are system properties passed in by the pom.
 
 -injars  <target.dir>/classes
 -injars  <manifest.dir>(META-INF/MANIFEST.MF)
 # Drop META-INF from the libraries: BC's jar signatures would not match a merged jar.
 -injars  <lib.dir>/gw_paste98-core-<core.version>.jar(!META-INF/**)
--injars  <lib.dir>/bcprov-jdk15to18-<bc.version>.jar(!META-INF/**)
--injars  <lib.dir>/bctls-jdk15to18-<bc.version>.jar(!META-INF/**)
--injars  <lib.dir>/bcutil-jdk15to18-<bc.version>.jar(!META-INF/**)
+-injars  <target.dir>/bc13/bcprov13.jar
+-injars  <target.dir>/bc13/bctls13.jar
+-injars  <target.dir>/bc13/bcutil13.jar
 -outjars <target.dir>/GWPASTE.JAR
 
-# Resolve JDK references against a Java 8 runtime. Java 5's API is a subset;
-# the build checks the code separately against the Java 5 signature.
+# Resolve JDK references against a Java 8 runtime; Check13 then verifies the
+# result against the Java 1.3 API.
 -libraryjars <jdk8.home>/jre/lib/rt.jar
 -libraryjars <jdk8.home>/jre/lib/jce.jar
 -libraryjars <jdk8.home>/jre/lib/jsse.jar
@@ -22,7 +23,7 @@
 -dontobfuscate
 -dontoptimize
 -dontpreverify
--keepattributes SourceFile,LineNumberTable,Signature,Exceptions,InnerClasses,EnclosingMethod
+-keepattributes SourceFile,LineNumberTable,Exceptions,InnerClasses
 
 -keep public class com.glitchwrks.paste98.client.Main {
     public static void main(java.lang.String[]);
@@ -33,14 +34,6 @@
 -keep class com.glitchwrks.paste98.client.tray.NativeTray {
     native <methods>;
     static void onEvent(int);
-}
-
-# java.util.prefs creates the settings backend by reflection from the class
-# name in the java.util.prefs.PreferencesFactory property (see Main).
--keep public class com.glitchwrks.paste98.client.prefs.FilePreferencesFactory {
-    public <init>();
-    public java.util.prefs.Preferences userRoot();
-    public java.util.prefs.Preferences systemRoot();
 }
 
 -printusage <target.dir>/proguard-removed.txt

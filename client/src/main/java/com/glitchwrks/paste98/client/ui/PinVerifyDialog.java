@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -50,7 +50,7 @@ final class PinVerifyDialog {
     private final JDialog dialog;
     private boolean add;
 
-    private PinVerifyDialog(Dialog owner, ServerKeyInfo info, List<String> currentPins) {
+    private PinVerifyDialog(Dialog owner, ServerKeyInfo info, List currentPins) {
         boolean known = currentPins.contains(info.getPin());
         boolean changed = !known && !currentPins.isEmpty();
 
@@ -177,7 +177,7 @@ final class PinVerifyDialog {
      * Shows the key and returns true only if the person confirmed they checked
      * the pin and chose to add it.
      */
-    static boolean confirmAdd(Dialog owner, ServerKeyInfo info, List<String> currentPins) {
+    static boolean confirmAdd(Dialog owner, ServerKeyInfo info, List currentPins) {
         PinVerifyDialog d = new PinVerifyDialog(owner, info, currentPins);
         d.dialog.setVisible(true); // modal
         return d.add;
@@ -215,11 +215,12 @@ final class PinVerifyDialog {
     }
 
     private static String html(String s) {
-        return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\n", "<br>");
+        return SettingsDialog.replace(SettingsDialog.replace(SettingsDialog.replace(SettingsDialog.replace(s, "&",
+                "&amp;"), "<", "&lt;"), ">", "&gt;"), "\n", "<br>");
     }
 
-    private static String join(List<String> l) {
-        StringBuilder sb = new StringBuilder();
+    private static String join(List l) {
+        StringBuffer sb = new StringBuffer();
         for (int i = 0; i < l.size(); i++) {
             if (i > 0) {
                 sb.append(", ");

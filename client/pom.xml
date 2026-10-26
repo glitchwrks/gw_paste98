@@ -12,7 +12,7 @@
 
   <artifactId>gw_paste98-client</artifactId>
   <name>gw_paste98 client</name>
-  <description>Swing tray application for Windows 98 / Java 5</description>
+  <description>Swing tray application for Windows 95/98 / Java 1.3 or later</description>
 
   <properties>
     <!-- NSIS compiler for the installer; override with -Dmakensis=/path/to/makensis -->
@@ -53,17 +53,17 @@
 
     <plugins>
       <!--
-        Tests use the file-backed java.util.prefs backend with a scratch file,
-        so they never touch a developer's real settings (or the registry).
+        Tests use a scratch settings file, so they never touch a developer's
+        real settings. PrefsXmlTest checks compatibility against the JDK's own
+        java.util.prefs, pointed at a scratch directory too.
       -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>
-            <java.util.prefs.PreferencesFactory>com.glitchwrks.paste98.client.prefs.FilePreferencesFactory</java.util.prefs.PreferencesFactory>
             <paste98.prefs.user>${project.build.directory}/test-prefs/PASTE98.PRF</paste98.prefs.user>
-            <paste98.prefs.system>${project.build.directory}/test-prefs/PASTE98S.PRF</paste98.prefs.system>
+            <java.util.prefs.userRoot>${project.build.directory}/test-prefs/jdk</java.util.prefs.userRoot>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -81,13 +81,49 @@
               <includeScope>runtime</includeScope>
             </configuration>
           </execution>
+          <execution>
+            <id>copy-java13-signature</id>
+            <phase>package</phase>
+            <goals><goal>copy</goal></goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.codehaus.mojo.signature</groupId>
+                  <artifactId>java13</artifactId>
+                  <version>1.0</version>
+                  <classifier>java13</classifier>
+                  <type>signature</type>
+                  <destFileName>java13.signature</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/sig</outputDirectory>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
-      <!-- GWPASTE.JAR: the client, core and the Bouncy Castle classes they use, shrunk by ProGuard. -->
+      <!--
+        GWPASTE.JAR: the client, core and the Bouncy Castle classes they use.
+        Bouncy Castle's jdk14 jars are retargeted to Java 1.3 (retro13's
+        Retarget13), everything is shrunk by ProGuard, then the jar is checked
+        against the Java 1.3 API (Check13). The build fails if anything in it
+        needs a newer Java.
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>animal-sniffer</artifactId>
+            <version>${animal-sniffer.version}</version>
+          </dependency>
+        </dependencies>
         <executions>
           <execution>
             <id>shrink</id>
@@ -95,6 +131,29 @@
             <goals><goal>run</goal></goals>
             <configuration>
               <target>
+                <property name="t" value="${project.build.directory}"/>
+                <!-- retro13 is built earlier in the reactor; its dependencies are this plugin's. -->
+                <path id="tools.cp">
+                  <pathelement location="${project.basedir}/../retro13/target/classes"/>
+                  <path refid="maven.plugin.classpath"/>
+                </path>
+
+                <delete dir="${t}/bc13"/>
+                <mkdir dir="${t}/bc13"/>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bcprov-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bcprov13.jar"/>
+                </java>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bctls-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bctls13.jar"/>
+                </java>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bcutil-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bcutil13.jar"/>
+                </java>
+
+                <delete file="${t}/GWPASTE.JAR"/>
                 <java classname="proguard.ProGuard" fork="true" failonerror="true"
                       classpathref="maven.plugin.classpath">
                   <sysproperty key="target.dir" value="${project.build.directory}"/>
@@ -104,6 +163,14 @@
                   <sysproperty key="core.version" value="${project.version}"/>
                   <sysproperty key="jdk8.home" value="${java.home}/.."/>
                   <arg value="@${project.basedir}/src/proguard/shrink.pro"/>
+                </java>
+
+                <delete dir="${t}/gwpaste-unpacked"/>
+                <unzip src="${t}/GWPASTE.JAR" dest="${t}/gwpaste-unpacked"/>
+                <java classname="Check13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/GWPASTE.JAR"/>
+                  <arg value="${t}/sig/java13.signature"/>
+                  <arg value="${t}/gwpaste-unpacked"/>
                 </java>
               </target>
             </configuration>

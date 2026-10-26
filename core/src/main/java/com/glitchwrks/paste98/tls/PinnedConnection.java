@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -12,9 +12,7 @@ package com.glitchwrks.paste98.tls;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.security.SecureRandom;
 
 import org.bouncycastle.tls.TlsClientProtocol;
 import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
@@ -40,14 +38,12 @@ public final class PinnedConnection {
     }
 
     /**
-     * One BcTlsCrypto (and SecureRandom) per JVM: seeding SecureRandom costs a
-     * few hundred milliseconds on old hardware, so it is done once.
+     * One BcTlsCrypto per JVM, using the shared SecureRandom from Randomness
+     * (seeded on first use; see there for why not Java's own seeding).
      */
     public static synchronized BcTlsCrypto crypto() {
         if (sharedCrypto == null) {
-            SecureRandom random = new SecureRandom();
-            random.nextBytes(new byte[32]); // force seeding now rather than mid-handshake
-            sharedCrypto = new BcTlsCrypto(random);
+            sharedCrypto = new BcTlsCrypto(Randomness.get());
         }
         return sharedCrypto;
     }
@@ -63,10 +59,9 @@ public final class PinnedConnection {
         if (options.getPins().isEmpty()) {
             throw new IOException("no server key pin is configured");
         }
-        Socket socket = new Socket();
         PinnedTlsClient client = new PinnedTlsClient(crypto(), options, true, null);
+        Socket socket = Sockets.connect(options.getHost(), options.getPort(), options.getTimeoutMs());
         try {
-            socket.connect(new InetSocketAddress(options.getHost(), options.getPort()), options.getTimeoutMs());
             socket.setSoTimeout(options.getTimeoutMs());
             socket.setTcpNoDelay(true);
             TlsClientProtocol protocol = new TlsClientProtocol(socket.getInputStream(), socket.getOutputStream());

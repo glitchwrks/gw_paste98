@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -19,20 +19,20 @@ import com.glitchwrks.paste98.tls.SpkiPin;
 /**
  * One configurable parameter: where it is stored, its type, default and
  * validation, and how it is described in the Settings dialog. Values are
- * stored as text in java.util.prefs, so a hand-edited or out-of-range value
+ * stored as text in the settings file, so a hand-edited or out-of-range value
  * is caught by {@link #parse(String)} and replaced by the default.
  *
- * @param <T> the Java type of the value
+ * Values are objects of one type per kind of setting (String, Integer,
+ * Boolean or List of String); Values has typed getters for each.
  */
-public abstract class Setting<T> {
+public abstract class Setting {
 
     private final String key;
     private final String section;
     private final String label;
     private final String help;
-    private final T defaultValue;
-
-    Setting(String key, String section, String label, String help, T defaultValue) {
+    private final Object defaultValue;
+    Setting(String key, String section, String label, String help, Object defaultValue) {
         this.key = key;
         this.section = section;
         this.label = label;
@@ -59,7 +59,7 @@ public abstract class Setting<T> {
         return help;
     }
 
-    public T getDefault() {
+    public Object getDefault() {
         return defaultValue;
     }
 
@@ -68,10 +68,10 @@ public abstract class Setting<T> {
      *
      * @throws InvalidSettingException with a message for the user
      */
-    public abstract T parse(String text) throws InvalidSettingException;
+    public abstract Object parse(String text) throws InvalidSettingException;
 
     /** The stored text for a value; parse(format(v)) equals v. */
-    public abstract String format(T value);
+    public abstract String format(Object value);
 
     public String toString() {
         return key;
@@ -84,7 +84,7 @@ public abstract class Setting<T> {
     // ---- types ---------------------------------------------------------------
 
     /** Free text, optionally required, with a length limit and no control characters. */
-    public static class Text extends Setting<String> {
+    public static class Text extends Setting {
         private final boolean required;
         private final int maxLength;
 
@@ -95,7 +95,10 @@ public abstract class Setting<T> {
             this.maxLength = maxLength;
         }
 
-        public String parse(String text) throws InvalidSettingException {
+        public Object parse(String text) throws InvalidSettingException {
+            return parseText(text);
+        }
+        String parseText(String text) throws InvalidSettingException {
             String s = text == null ? "" : text.trim();
             if (required && s.length() == 0) {
                 throw invalid("must not be empty");
@@ -111,19 +114,18 @@ public abstract class Setting<T> {
             return s;
         }
 
-        public String format(String value) {
-            return value;
+        public String format(Object value) {
+            return (String) value;
         }
     }
-
     /** A host name or IP address. */
     public static final class Host extends Text {
         Host(String key, String section, String label, String help, String defaultValue) {
             super(key, section, label, help, defaultValue, true, 253);
         }
 
-        public String parse(String text) throws InvalidSettingException {
-            String s = super.parse(text);
+        public Object parse(String text) throws InvalidSettingException {
+            String s = parseText(text);
             for (int i = 0; i < s.length(); i++) {
                 char c = s.charAt(i);
                 boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
@@ -137,19 +139,19 @@ public abstract class Setting<T> {
     }
 
     /** A whole number in a range. */
-    public static final class Int extends Setting<Integer> {
+    public static final class Int extends Setting {
         private final int min;
         private final int max;
         private final String unit;
 
         Int(String key, String section, String label, String help, int defaultValue, int min, int max, String unit) {
-            super(key, section, label, help, Integer.valueOf(defaultValue));
+            super(key, section, label, help, new Integer(defaultValue));
             this.min = min;
             this.max = max;
             this.unit = unit;
         }
 
-        public Integer parse(String text) throws InvalidSettingException {
+        public Object parse(String text) throws InvalidSettingException {
             String s = text == null ? "" : text.trim();
             int v;
             try {
@@ -160,10 +162,10 @@ public abstract class Setting<T> {
             if (v < min || v > max) {
                 throw invalid("must be between " + min + " and " + max);
             }
-            return Integer.valueOf(v);
+            return new Integer(v);
         }
 
-        public String format(Integer value) {
+        public String format(Object value) {
             return value.toString();
         }
 
@@ -182,12 +184,12 @@ public abstract class Setting<T> {
     }
 
     /** On or off. */
-    public static final class Flag extends Setting<Boolean> {
+    public static final class Flag extends Setting {
         Flag(String key, String section, String label, String help, boolean defaultValue) {
-            super(key, section, label, help, Boolean.valueOf(defaultValue));
+            super(key, section, label, help, defaultValue ? Boolean.TRUE : Boolean.FALSE);
         }
 
-        public Boolean parse(String text) throws InvalidSettingException {
+        public Object parse(String text) throws InvalidSettingException {
             String s = text == null ? "" : text.trim();
             if (s.equalsIgnoreCase("true")) {
                 return Boolean.TRUE;
@@ -198,13 +200,13 @@ public abstract class Setting<T> {
             throw invalid("must be true or false");
         }
 
-        public String format(Boolean value) {
+        public String format(Object value) {
             return value.toString();
         }
     }
 
     /** One of a fixed set of stored values, each with a display name. */
-    public static final class Choice extends Setting<String> {
+    public static final class Choice extends Setting {
         private final String[] values;
         private final String[] names;
 
@@ -215,7 +217,7 @@ public abstract class Setting<T> {
             this.names = names;
         }
 
-        public String parse(String text) throws InvalidSettingException {
+        public Object parse(String text) throws InvalidSettingException {
             String s = text == null ? "" : text.trim();
             for (int i = 0; i < values.length; i++) {
                 if (values[i].equals(s)) {
@@ -225,16 +227,14 @@ public abstract class Setting<T> {
             throw invalid("\"" + s + "\" is not one of the choices");
         }
 
-        public String format(String value) {
-            return value;
+        public String format(Object value) {
+            return (String) value;
         }
-
         public String[] getValues() {
-            return values.clone();
+            return (String[]) values.clone();
         }
-
         public String[] getNames() {
-            return names.clone();
+            return (String[]) names.clone();
         }
     }
 
@@ -243,13 +243,13 @@ public abstract class Setting<T> {
      * commas and blank lines are also accepted). Empty is allowed here; the
      * program refuses to connect until at least one pin is set.
      */
-    public static final class Pins extends Setting<List<String>> {
+    public static final class Pins extends Setting {
         Pins(String key, String section, String label, String help) {
-            super(key, section, label, help, Collections.<String>emptyList());
+            super(key, section, label, help, Collections.EMPTY_LIST);
         }
 
-        public List<String> parse(String text) throws InvalidSettingException {
-            List<String> pins = new ArrayList<String>();
+        public Object parse(String text) throws InvalidSettingException {
+            List pins = new ArrayList();
             StringTokenizer st = new StringTokenizer(text == null ? "" : text, " ,;\t\r\n");
             while (st.hasMoreTokens()) {
                 String pin = st.nextToken();
@@ -270,13 +270,14 @@ public abstract class Setting<T> {
             return Collections.unmodifiableList(pins);
         }
 
-        public String format(List<String> value) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < value.size(); i++) {
+        public String format(Object value) {
+            List list = (List) value;
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < list.size(); i++) {
                 if (i > 0) {
                     sb.append(' ');
                 }
-                sb.append(value.get(i));
+                sb.append(list.get(i));
             }
             return sb.toString();
         }

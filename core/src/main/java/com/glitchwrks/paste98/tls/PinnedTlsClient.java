@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ public final class PinnedTlsClient extends DefaultTlsClient {
      * Strong references to moduli marked as validated. BC's cache of validated
      * moduli is a WeakHashMap, so without these the entries could be collected.
      */
-    private static final List<RSAKeyParameters> PRE_VALIDATED = new ArrayList<RSAKeyParameters>();
+    private static final List PRE_VALIDATED = new ArrayList();
 
     private final TlsOptions options;
     private final boolean enforcePins;
@@ -195,12 +195,12 @@ public final class PinnedTlsClient extends DefaultTlsClient {
         String group = options.getGroup();
         Vector groups = new Vector();
         if (TlsOptions.GROUP_X25519.equals(group)) {
-            groups.addElement(Integer.valueOf(NamedGroup.x25519));
+            groups.addElement(new Integer(NamedGroup.x25519));
         } else if (TlsOptions.GROUP_P256.equals(group)) {
-            groups.addElement(Integer.valueOf(NamedGroup.secp256r1));
+            groups.addElement(new Integer(NamedGroup.secp256r1));
         } else {
-            groups.addElement(Integer.valueOf(NamedGroup.x25519));
-            groups.addElement(Integer.valueOf(NamedGroup.secp256r1));
+            groups.addElement(new Integer(NamedGroup.x25519));
+            groups.addElement(new Integer(NamedGroup.secp256r1));
         }
         return groups;
     }
@@ -311,7 +311,7 @@ public final class PinnedTlsClient extends DefaultTlsClient {
 
     public String describeConnection() {
         SecurityParameters sp = context.getSecurityParametersConnection();
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         sb.append(sp.getNegotiatedVersion()).append(", ");
         sb.append(suiteName(sp.getCipherSuite()));
         int group = sp.getNegotiatedGroup();

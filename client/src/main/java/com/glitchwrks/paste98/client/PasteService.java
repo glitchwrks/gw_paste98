@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -11,9 +11,6 @@ package com.glitchwrks.paste98.client;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import javax.swing.SwingUtilities;
 
@@ -26,6 +23,7 @@ import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.settings.Values;
 import com.glitchwrks.paste98.tls.PinMismatchException;
 import com.glitchwrks.paste98.tls.PinnedConnection;
+import com.glitchwrks.paste98.tls.Randomness;
 import com.glitchwrks.paste98.tls.TlsOptions;
 
 /**
@@ -55,7 +53,7 @@ public final class PasteService {
     }
 
     private final SettingsStore settings;
-    private final ExecutorService worker;
+    private final Worker worker;
     private StatusListener listener;
 
     private String shortStatus = "Starting";
@@ -69,13 +67,7 @@ public final class PasteService {
 
     public PasteService(SettingsStore settings) {
         this.settings = settings;
-        this.worker = Executors.newSingleThreadExecutor(new ThreadFactory() {
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "paste-worker");
-                t.setDaemon(true);
-                return t;
-            }
-        });
+        this.worker = new Worker("paste-worker");
         Values v = settings.current();
         if (!v.isConfigured()) {
             shortStatus = "Not set up";
@@ -189,7 +181,7 @@ public final class PasteService {
                 long t0 = System.currentTimeMillis();
                 try {
                     PasteClient client = new PasteClient(new PinnedTransport(v.tlsOptions()),
-                            PinnedConnection.crypto().getSecureRandom(), Version.userAgent());
+                            Randomness.get(), Version.userAgent());
                     final PasteResult r = client.send(content, user, pw);
                     Log.info("paste created in " + (System.currentTimeMillis() - t0) + " ms: " + r.getUrl()
                             + (r.getAttempts() > 1 ? " (" + r.getAttempts() + " name attempts)" : ""));

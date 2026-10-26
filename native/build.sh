@@ -56,7 +56,8 @@ $ZIG lld-link /dll /machine:x86 /nodefaultlib /safeseh:no /Brepro \
     /export:${P}nativeVersion=_${P}nativeVersion@8 \
     /export:${P}nativeRun=_${P}nativeRun@24 \
     /export:${P}nativeSetTooltip=_${P}nativeSetTooltip@12 \
-    /export:${P}nativeQuit=_${P}nativeQuit@8
+    /export:${P}nativeQuit=_${P}nativeQuit@8 \
+    /export:${P}nativeRandom=_${P}nativeRandom@12
 
 rm -f "$HERE/prebuilt/gwtray.lib" "$HERE/prebuilt/gwtray.exp" "$HERE/prebuilt/gwtray.pdb"
 

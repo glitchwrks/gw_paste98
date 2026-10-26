@@ -1,6 +1,6 @@
 # gw_paste98
 
-A Java 5 / Windows 98SE tray client for the
+A Windows 95/98 tray client, running on Java 1.3 or later, for the
 [Glitch Works pastes service](https://github.com/glitchwrks/pastes), using
 modern TLS on a period machine.
 
@@ -10,11 +10,29 @@ service, with an LLM doing much of the work.
 
 ## How it works
 
-- **TLS 1.2 in pure Java.** Java 5's own JSSE stops at TLS 1.0, so the client
-  uses Bouncy Castle's TLS client (the `jdk15to18` builds, which are Java 5
-  bytecode) with its lightweight crypto, avoiding Java 5's JCE policy limits.
+- **One build for Java 1.3 and later.** Java 1.3.1 is the newest Java for
+  Windows 95, Java 5 the newest for Windows 98. The program is compiled for
+  Java 1.3 and uses newer features (the Ocean theme, Socket connect timeouts,
+  Java's own seeding of `SecureRandom`) at run time when they exist.
+- **TLS 1.2 in pure Java.** Java 1.3 has no TLS at all and Java 5's stops at
+  TLS 1.0, so the client uses Bouncy Castle's TLS client with its lightweight
+  crypto, avoiding JCE and its policy limits. Bouncy Castle's oldest builds
+  (`jdk14`) are Java 1.4 bytecode, so the build retargets them to Java 1.3
+  (`retro13/.../Retarget13`): `java.util.logging` and `Destroyable`, which
+  Java 1.3 lacks, become small stand-ins in `core/.../compat13` (BC's log
+  messages go to the program's log); exception causes (`initCause` and the
+  cause-taking constructors, Java 1.4) are recorded in a side table so logs
+  still show them; and field stores javac 1.4 places before `super()`, which
+  Java 1.3's verifier rejects, are moved after it. `Check13` then fails the
+  build unless every class in the shipped jar is Java 1.3 bytecode using only
+  the Java 1.3 API.
+- **Random numbers without the half-minute wait.** Java 1.3 seeds
+  `SecureRandom` by timing threads, which took 33 s on the T22. The client
+  seeds it instead with SHA-256 of Windows' `CryptGenRandom` (via
+  `gwtray.dll`), a seed file saved at exit, Java's own seeding on Java 5+, and
+  timing jitter (`core/.../tls/Randomness`).
 - **Pinned server key.** The server is authenticated by a SHA-256 pin of its
-  public key, not by a certificate authority. Java 5's CA list is irrelevant,
+  public key, not by a certificate authority. Old Javas' CA lists are irrelevant,
   and Let's Encrypt renewals do not affect clients while the key stays the same.
 - **Fast enough on a Pentium III.** Measured on a ThinkPad T22: about 2.4 s from
   launch to the first completed handshake, then about 0.4 s per paste. Getting
@@ -26,8 +44,8 @@ service, with an LLM doing much of the work.
     modulus that otherwise cost ~10 s in Java 5's `BigInteger`. This is safe
     because the check only guards against malformed keys, and a pinned key is
     the server's real one. See `PinnedTlsClient`.
-- **Tray icon.** Java 5 has no tray API, so `native/gwtray.c` provides one as a
-  ~9 KB JNI DLL with no C runtime, importing only Windows 98 functions. If it
+- **Tray icon.** Java before 6 has no tray API, so `native/gwtray.c` provides one as a
+  ~9 KB JNI DLL with no C runtime, importing only Windows 95 functions. If it
   cannot be used, the client falls back to a small Swing window.
 - **Warm-up.** The tray client does one throwaway handshake in the background
   at launch, so the slow first handshake happens while you are typing.
@@ -35,11 +53,11 @@ service, with an LLM doing much of the work.
   Java cannot draw Windows 98's bitmap UI font (MS Sans Serif), so the Windows
   look always shows slightly different text; it is available as a setting,
   substituting Microsoft Sans Serif or Tahoma when installed.
-- **Settings without the registry.** Settings use the standard
-  `java.util.prefs` API, the period-correct choice for Java on Windows, but
-  with a small file backend (`client/.../prefs`) installed in place of Java's
-  default Windows backend, which writes to the registry. Everything is stored
-  in `PASTE98.PRF` in the program folder.
+- **Settings without the registry.** Everything is stored in `PASTE98.PRF`
+  in the program folder (`client/.../prefs`). Up to 0.7 this was a
+  `java.util.prefs` backend; Java 1.3 has no `java.util.prefs`, so 0.8 reads
+  and writes the same file directly, and exports and imports the same
+  preferences XML with a small parser of its own (tested against the JDK's).
 
 ## Getting the server's key pin
 
@@ -57,7 +75,7 @@ and hash the public key:
       | openssl base64
 
 The client's **Settings > Server > Get pin from server...** does the same
-thing from the Windows 98 machine. **Neither verifies anything**: both report
+thing from the Windows 9x machine. **Neither verifies anything**: both report
 whatever key the server that answered presented, so an interception between
 you and the server would show the interceptor's key. Treat the result as a
 claim to check, not as the answer. The pin is only trustworthy if it matches
@@ -76,9 +94,10 @@ effect and adds it only after you confirm you have checked it.
 
 | Path | What |
 |---|---|
-| `core/` | Pinned TLS 1.2 client (`tls`) and pastes API client (`api`); shared |
+| `retro13/` | Build tools: `Retarget13` (Bouncy Castle's Java 1.4 jars to Java 1.3) and `Check13` (verifies a jar against the Java 1.3 API) |
+| `core/` | Pinned TLS 1.2 client (`tls`), pastes API client (`api`) and the Java 1.3 stand-ins (`compat13`); shared |
 | `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
-| `bench/` | `pastebench`, the TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
+| `bench/` | `pastebench`, the Java 5 TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
 | `bench13/` | `pastebench13`, the same pinned TLS 1.2 handshake on Java 1.3 (the newest for Windows 95), with Bouncy Castle's Java 1.4 build retargeted to 1.3 at build time; builds `bench13/target/pastebench13-win9x.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
 | `tools/` | `fake_pastes_server.py`, a local stand-in for the pastes service, for testing |
@@ -101,13 +120,15 @@ If a later version changes the meaning of a stored value, bump
 ## Building
 
 Needs **JDK 8** and **Maven 3**. JDK 8's `javac` is the last one that can
-produce Java 5 class files (`-source 1.5 -target 1.5`).
+produce Java 1.3 class files (`-source 1.3 -target 1.3`). Tests are compiled
+for Java 5 and run on the build JDK.
 
     JAVA_HOME=/path/to/jdk8 mvn package
 
-This compiles everything for Java 5, runs the unit tests, fails the build if
-any code uses an API newer than Java 5 (animal-sniffer), shrinks the jars with
-ProGuard and assembles the two Windows 98 zips.
+This compiles the program for Java 1.3, runs the unit tests, retargets Bouncy
+Castle, shrinks the jars with ProGuard, fails the build if `GWPASTE.JAR` needs
+anything newer than Java 1.3 (`Check13`, against animal-sniffer's java13
+signature) and assembles the zips.
 
 The help file is compiled HTML Help (`.CHM`), the format Windows 98's own
 help uses, built with **chmcmd** from Free Pascal (`apt install fp-utils`, or
@@ -130,15 +151,17 @@ the DLL (Zig 0.13 as the cross-compiler, plus Python with `pefile` and
 
 `native/build.sh` is reproducible (byte-identical output) and runs
 `native/check_pe.py`, which fails the build if the DLL is marked for a Windows
-newer than 4.0, imports anything Windows 98 lacks, uses MMX/SSE instructions,
+newer than 4.0, imports anything Windows 95 lacks (CryptoAPI is loaded at run time, if present), uses MMX/SSE instructions,
 or has wrong JNI export names or stdcall argument sizes.
 
 ## Testing
 
 - `mvn package` runs the unit tests (API client logic against canned
-  responses, HTTP parsing, JSON encoding, the preferences file backend, and
-  settings validation, migration and XML import). Client tests use a scratch
-  settings file, never the real one.
+  responses, HTTP parsing, JSON encoding, the settings file, preferences XML
+  compatibility with the JDK's `java.util.prefs`, settings validation,
+  migration and XML import, the retargeting of a sample compiled for Java 1.4,
+  and the Java 1.3 code paths for connecting and seeding). Client tests use a
+  scratch settings file, never the real one.
 - `tools/fake_pastes_server.py` mimics the real service's responses (Basic Auth,
   JSON schema check, name uniqueness, latin1 storage) over TLS, so the client
   can be exercised end to end without touching production:
@@ -182,6 +205,11 @@ and per-tab Help buttons.
 with the Glitch Works badge: hand-drawn 16-colour pixel art at 16x16 and
 32x32 for the tray (`native/make_icon.py`), and a full-colour 64x64 version
 in the About window (`native/make_logo.py`).
+
+0.7.2 is the last release for Java 5 only (branch `java5-0.7.x`). 0.8.0 runs on
+Java 1.3 and later, and so on Windows 95. `pastebench13` showed Bouncy Castle's
+TLS 1.2 handshake working on Java 1.3.1 on the T22 (about 0.85 s for the first
+handshake, 0.3 s after).
 
 ## Licence
 

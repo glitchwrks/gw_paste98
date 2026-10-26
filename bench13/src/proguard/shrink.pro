@@ -6,6 +6,7 @@
 # Values in <angle brackets> are system properties passed in by the pom.
 
 -injars  <target.dir>/classes
+-injars  <lib.dir>/gw_paste98-core-<core.version>.jar(!META-INF/**)
 -injars  <manifest.dir>(META-INF/MANIFEST.MF)
 -injars  <target.dir>/bc13/bcprov13.jar
 -injars  <target.dir>/bc13/bctls13.jar

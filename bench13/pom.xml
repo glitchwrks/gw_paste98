@@ -14,27 +14,15 @@
   <name>gw_paste98 pastebench13</name>
   <description>Pinned TLS 1.2 benchmark for Java 1.3 (Windows 95)</description>
 
-  <properties>
-    <asm.version>9.7</asm.version>
-    <animal-sniffer.version>1.24</animal-sniffer.version>
-  </properties>
-
   <dependencies>
-    <!-- Bouncy Castle's Java 1.4 builds; Retarget13 adapts them for 1.3 at package time. -->
+    <!--
+      For the Java 1.3 stand-ins (compat13) and Bouncy Castle's Java 1.4
+      builds, which Retarget13 adapts for 1.3 at package time. The benchmark
+      keeps its own copy of the pinned client (PinnedClient13).
+    -->
     <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk14</artifactId>
-      <version>${bc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bctls-jdk14</artifactId>
-      <version>${bc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcutil-jdk14</artifactId>
-      <version>${bc.version}</version>
+      <groupId>com.glitchwrks.paste98</groupId>
+      <artifactId>gw_paste98-core</artifactId>
     </dependency>
   </dependencies>
 
@@ -113,13 +101,9 @@
             <configuration>
               <target>
                 <property name="t" value="${project.build.directory}"/>
-                <delete dir="${t}/build-tools"/>
-                <mkdir dir="${t}/build-tools"/>
-                <javac srcdir="${project.basedir}/src/build/java" destdir="${t}/build-tools"
-                       classpathref="maven.plugin.classpath" includeantruntime="false"
-                       source="1.8" target="1.8" debug="true" encoding="UTF-8"/>
+                <!-- retro13 is built earlier in the reactor; its dependencies are this plugin's. -->
                 <path id="tools.cp">
-                  <pathelement location="${t}/build-tools"/>
+                  <pathelement location="${project.basedir}/../retro13/target/classes"/>
                   <path refid="maven.plugin.classpath"/>
                 </path>
 
@@ -142,6 +126,8 @@
                 <java classname="proguard.ProGuard" fork="true" failonerror="true"
                       classpathref="maven.plugin.classpath">
                   <sysproperty key="target.dir" value="${t}"/>
+                  <sysproperty key="lib.dir" value="${t}/lib"/>
+                  <sysproperty key="core.version" value="${project.version}"/>
                   <sysproperty key="manifest.dir" value="${project.basedir}/src/proguard/manifest"/>
                   <sysproperty key="jdk8.home" value="${java.home}/.."/>
                   <arg value="@${project.basedir}/src/proguard/shrink.pro"/>

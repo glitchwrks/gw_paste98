@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -21,7 +21,7 @@ import java.awt.datatransfer.Transferable;
 import com.glitchwrks.paste98.api.ContentCheck;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
-import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.client.prefs.SettingsFile;
 import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.settings.Values;
@@ -33,6 +33,7 @@ import com.glitchwrks.paste98.client.ui.Dialogs;
 import com.glitchwrks.paste98.client.ui.FallbackWindow;
 import com.glitchwrks.paste98.client.ui.Help;
 import com.glitchwrks.paste98.client.ui.SettingsDialog;
+import com.glitchwrks.paste98.tls.Randomness;
 
 /**
  * Wires the tray (or fallback window), the compose window, the dialogs and
@@ -103,7 +104,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         SettingsDialog.showLoadProblems(parent(), settings.getLoadProblems());
         if (legacyImport != null) {
             Dialogs.info(parent(), "Settings", "Your settings were copied from " + SettingsStore.LEGACY_SETTINGS
-                    + " into " + FilePreferencesFactory.USER_FILE + ". " + SettingsStore.LEGACY_SETTINGS
+                    + " into " + SettingsFile.USER_FILE + ". " + SettingsStore.LEGACY_SETTINGS
                     + " has been renamed to " + SettingsStore.LEGACY_RENAMED
                     + " and is no longer used: change settings with Settings... in the menu.");
         }
@@ -288,7 +289,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         Values v = settings.current();
         String remembered = v.rememberedUsername();
         String last = service.getUsername();
-        Dialogs.Credentials c = Dialogs.askCredentials(parent, v.get(Settings.HOST),
+        Dialogs.Credentials c = Dialogs.askCredentials(parent, v.getText(Settings.HOST),
                 last != null ? last : remembered, remembered != null, reason);
         if (c == null) {
             return false;
@@ -298,7 +299,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         if (want == null ? remembered != null : !want.equals(remembered)) {
             try {
                 settings.rememberUsername(want);
-            } catch (java.util.prefs.BackingStoreException e) {
+            } catch (java.io.IOException e) {
                 Log.info("cannot save the username: " + e.getMessage());
             }
         }
@@ -309,10 +310,10 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
 
     private void showStatus() {
         Values v = settings.current();
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         sb.append(service.getDetail()).append("\n\n");
-        sb.append("Server: ").append(v.get(Settings.HOST)).append(':').append(v.getInt(Settings.PORT)).append('\n');
-        sb.append("Pinned keys: ").append(v.get(Settings.PINS).size()).append('\n');
+        sb.append("Server: ").append(v.getText(Settings.HOST)).append(':').append(v.getInt(Settings.PORT)).append('\n');
+        sb.append("Pinned keys: ").append(v.getList(Settings.PINS).size()).append('\n');
         sb.append("Logged in as: ").append(service.hasCredentials() ? service.getUsername() : "(not logged in)")
                 .append('\n');
         if (service.getLastUrl() != null) {
@@ -320,14 +321,15 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
         }
         sb.append("Tray icon: ").append(trayActive ? "yes" : "no (see PASTE98.LOG)").append('\n');
         sb.append("Appearance: ").append(Appearance.describe()).append('\n');
-        sb.append("Settings file: ").append(FilePreferencesFactory.userFile()).append('\n');
+        sb.append("Settings file: ").append(settings.getFile()).append('\n');
+        sb.append("Random numbers: ").append(Randomness.describe()).append('\n');
         sb.append("Folder: ").append(AppDir.get());
         Dialogs.info(parent(), "Status", sb.toString());
     }
 
     private void showAbout() {
         Dialogs.about(parent(), AppIcons.about(),
-                Version.NAME + " " + Version.VERSION + "\nA Windows 98 client for the Glitch Works pastes service.",
+                Version.NAME + " " + Version.VERSION + "\nA Windows 95/98 client for the Glitch Works pastes service.",
                 AppIcons.javaRuntime(),
                 "Encryption: TLS 1.2 by Bouncy Castle, server authenticated by a pinned key."
                         + "\nJava " + System.getProperty("java.version") + " on " + System.getProperty("os.name")
@@ -349,8 +351,8 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
 
     public void settingsChanged(Values before, Values after) {
         service.settingsChanged(before, after);
-        if (!before.get(Settings.LOOK).equals(after.get(Settings.LOOK))) {
-            Appearance.apply(after.get(Settings.LOOK));
+        if (!before.getText(Settings.LOOK).equals(after.getText(Settings.LOOK))) {
+            Appearance.apply(after.getText(Settings.LOOK));
         }
     }
 
@@ -398,7 +400,7 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
 
     /** First few lines of text, shortened, for confirmation dialogs. */
     static String preview(String text) {
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
         int lines = 0;
         int start = 0;
         while (start < text.length() && lines < 6) {

@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -29,7 +29,7 @@
 #include <shellapi.h>
 #include <jni.h>
 
-#define GWTRAY_VERSION 1
+#define GWTRAY_VERSION 2 /* 2: nativeRandom */
 
 #define WM_GWTRAY       (WM_APP + 1)   /* tray icon mouse events */
 #define WM_GWTIP        (WM_APP + 2)   /* tooltip changed */
@@ -401,4 +401,62 @@ Java_com_glitchwrks_paste98_client_tray_NativeTray_nativeQuit(JNIEnv *env, jclas
     if (hwnd != NULL) {
         PostMessageA(hwnd, WM_CLOSE, 0, 0);
     }
+}
+
+/*
+ * Method: nativeRandom([B)I -- fills the array (at most 256 bytes) from
+ * Windows' CryptGenRandom, a seed source for the program's SecureRandom
+ * (Java 1.3's own seeding takes 30 s and more on old PCs).
+ *
+ * CryptoAPI is looked up at run time rather than imported: Windows 98 has it,
+ * but Windows 95 only with OSR2 or Internet Explorer 3.02 and later, and the
+ * DLL must still load without it. Returns the number of bytes written, or
+ * -1 if ADVAPI32.DLL cannot be loaded, -2 if it has no CryptoAPI, -3 if no
+ * provider could be opened, -4 if CryptGenRandom failed.
+ */
+typedef BOOL (WINAPI *acquire_fn)(ULONG_PTR *, LPCSTR, LPCSTR, DWORD, DWORD);
+typedef BOOL (WINAPI *genrandom_fn)(ULONG_PTR, DWORD, BYTE *);
+typedef BOOL (WINAPI *release_fn)(ULONG_PTR, DWORD);
+#define GW_PROV_RSA_FULL 1
+#define GW_CRYPT_VERIFYCONTEXT 0xF0000000u
+#define RANDOM_MAX 256
+
+JNIEXPORT jint JNICALL
+Java_com_glitchwrks_paste98_client_tray_NativeTray_nativeRandom(JNIEnv *env, jclass cls, jbyteArray out) {
+    BYTE buf[RANDOM_MAX];
+    HMODULE advapi;
+    acquire_fn acquire;
+    genrandom_fn genrandom;
+    release_fn release;
+    ULONG_PTR prov = 0;
+    jint n;
+    jint rc;
+    (void) cls;
+    n = (*env)->GetArrayLength(env, out);
+    if (n > RANDOM_MAX) {
+        n = RANDOM_MAX;
+    }
+    advapi = LoadLibraryA("ADVAPI32.DLL");
+    if (advapi == NULL) {
+        return -1;
+    }
+    acquire = (acquire_fn) GetProcAddress(advapi, "CryptAcquireContextA");
+    genrandom = (genrandom_fn) GetProcAddress(advapi, "CryptGenRandom");
+    release = (release_fn) GetProcAddress(advapi, "CryptReleaseContext");
+    if (acquire == NULL || genrandom == NULL || release == NULL) {
+        rc = -2;
+    } else if (!acquire(&prov, NULL, NULL, GW_PROV_RSA_FULL, GW_CRYPT_VERIFYCONTEXT)) {
+        rc = -3;
+    } else {
+        if (genrandom(prov, (DWORD) n, buf)) {
+            (*env)->SetByteArrayRegion(env, out, 0, n, (jbyte *) buf);
+            rc = n;
+        } else {
+            rc = -4;
+        }
+        release(prov, 0);
+    }
+    memset(buf, 0, sizeof(buf));
+    FreeLibrary(advapi);
+    return rc;
 }

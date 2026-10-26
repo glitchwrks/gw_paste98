@@ -13,13 +13,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.client.prefs.SettingsFile;
 import com.glitchwrks.paste98.tls.TlsOptions;
 
 public class SettingsTest {
@@ -44,8 +43,8 @@ public class SettingsTest {
         dir.delete();
     }
 
-    private Preferences tree() {
-        return FilePreferencesFactory.openUserTree(new File(dir, "PASTE98.PRF"));
+    private SettingsFile tree() {
+        return new SettingsFile(new File(dir, "PASTE98.PRF"), Settings.NODE);
     }
 
     // ---- declarations --------------------------------------------------------
@@ -54,10 +53,10 @@ public class SettingsTest {
     public void declarationsAreConsistent() {
         List<String> keys = new ArrayList<String>();
         for (int i = 0; i < Settings.all().size(); i++) {
-            Setting<?> s = Settings.all().get(i);
+            Setting s = (Setting) Settings.all().get(i);
             assertFalse("duplicate key " + s.getKey(), keys.contains(s.getKey()));
             keys.add(s.getKey());
-            assertTrue(s.getKey().length() <= Preferences.MAX_KEY_LENGTH);
+            assertTrue(s.getKey().length() <= 80); // java.util.prefs' limit, for exports
             boolean known = false;
             for (int j = 0; j < Settings.SECTIONS.length; j++) {
                 known |= Settings.SECTIONS[j].equals(s.getSection());
@@ -67,7 +66,7 @@ public class SettingsTest {
         }
     }
 
-    private static <T> void assertDefaultRoundTrips(Setting<T> s) {
+    private static void assertDefaultRoundTrips(Setting s) {
         try {
             assertEquals(s.getKey(), s.getDefault(), s.parse(s.format(s.getDefault())));
         } catch (InvalidSettingException e) {
@@ -94,11 +93,11 @@ public class SettingsTest {
         assertEquals(TlsOptions.CIPHER_CHACHA, Settings.CIPHER.parse("chacha"));
         bad(Settings.CIPHER, "rc4");
 
-        List<String> pins = Settings.PINS.parse(PIN1 + "\r\n\r\n  sha256//" + PIN2 + "\n" + PIN1);
+        List pins = (List) Settings.PINS.parse(PIN1 + "\r\n\r\n  sha256//" + PIN2 + "\n" + PIN1);
         assertEquals(2, pins.size()); // duplicate dropped, prefix stripped
         assertEquals(PIN2, pins.get(1));
         assertEquals(PIN1 + " " + PIN2, Settings.PINS.format(pins));
-        assertTrue(Settings.PINS.parse("  \n ").isEmpty());
+        assertTrue(((List) Settings.PINS.parse("  \n ")).isEmpty());
         bad(Settings.PINS, "REPLACE_WITH_LIVE_KEY_PIN");
         bad(Settings.PINS, PIN1 + " AAAA");
 
@@ -106,7 +105,7 @@ public class SettingsTest {
         bad(Settings.USERNAME, "tab\there");
     }
 
-    private static void bad(Setting<?> s, String text) {
+    private static void bad(Setting s, String text) {
         try {
             s.parse(text);
             fail(s + " accepted \"" + text + "\"");
@@ -151,7 +150,7 @@ public class SettingsTest {
         assertTrue(again.hasBeenSaved());
         assertEquals("pastes.example.com", r.get(Settings.HOST));
         assertEquals(8443, r.getInt(Settings.PORT));
-        assertEquals(2, r.get(Settings.PINS).size());
+        assertEquals(2, r.getList(Settings.PINS).size());
         assertFalse(r.is(Settings.WARM_UP));
         assertEquals("glitch", r.rememberedUsername());
 
@@ -167,14 +166,14 @@ public class SettingsTest {
 
     @Test
     public void invalidStoredValuesFallBackToDefaults() throws Exception {
-        Preferences node = tree().node(Settings.NODE);
+        SettingsFile node = tree();
         node.put(Settings.PORT.getKey(), "99999");
         node.put(Settings.PINS.getKey(), "not-a-pin");
         node.put(Settings.HOST.getKey(), "pastes.example.com");
         node.flush();
         SettingsStore store = new SettingsStore(tree());
         assertEquals(443, store.current().getInt(Settings.PORT));
-        assertTrue(store.current().get(Settings.PINS).isEmpty());
+        assertTrue(store.current().getList(Settings.PINS).isEmpty());
         assertEquals("pastes.example.com", store.current().get(Settings.HOST));
         assertEquals(2, store.getLoadProblems().size());
     }
@@ -204,7 +203,7 @@ public class SettingsTest {
         Values v = new SettingsStore(tree()).current();
         assertEquals("pastes.example.com", v.get(Settings.HOST));
         assertEquals(8443, v.getInt(Settings.PORT));
-        assertEquals(2, v.get(Settings.PINS).size());
+        assertEquals(2, v.getList(Settings.PINS).size());
         assertEquals("glitch", v.rememberedUsername());
         assertFalse(new File(dir, "PASTE98.CFG").exists());
         assertTrue(new File(dir, "PASTE98.OLD").isFile());
@@ -248,7 +247,7 @@ public class SettingsTest {
         assertEquals(Settings.all().size(), r.count);
         assertTrue(r.problems.isEmpty());
         assertEquals("pastes.example.com", r.values.get(Settings.HOST));
-        assertEquals(PIN1, r.values.get(Settings.PINS).get(0));
+        assertEquals(PIN1, r.values.getList(Settings.PINS).get(0));
         assertFalse(r.values.is(Settings.COPY_URL));
     }
 

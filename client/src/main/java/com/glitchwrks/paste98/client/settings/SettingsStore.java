@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -19,13 +19,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 import com.glitchwrks.paste98.client.Log;
+import com.glitchwrks.paste98.client.prefs.PrefsXml;
+import com.glitchwrks.paste98.client.prefs.SettingsFile;
 
 /**
- * Loads, validates and saves {@link Settings} in a java.util.prefs node, and
+ * Loads, validates and saves {@link Settings} in the settings file, and
  * tells listeners when they change. Thread-safe; listeners are called on the
  * thread that saved.
  */
@@ -36,35 +36,22 @@ public final class SettingsStore {
         void settingsChanged(Values before, Values after);
     }
 
-    private final Preferences root;
-    private final List<Listener> listeners = new ArrayList<Listener>();
+    private final SettingsFile file;
+    private final List listeners = new ArrayList();
     private Values current;
-    private final List<String> loadProblems = new ArrayList<String>();
+    private final List loadProblems = new ArrayList();
 
     /**
-     * @param root the preferences root (Preferences.userRoot() in the program)
+     * @param file the settings file (new SettingsFile(SettingsFile.defaultFile(), Settings.NODE) in the program)
      */
-    public SettingsStore(Preferences root) {
-        this.root = root;
+    public SettingsStore(SettingsFile file) {
+        this.file = file;
         this.current = read();
     }
 
-    /**
-     * The settings node, created on first use. Only saving calls this, so
-     * merely reading settings on a fresh install does not create the file.
-     */
-    private Preferences node() {
-        return root.node(Settings.NODE);
-    }
-
-    /** The settings node if it exists, else null. */
-    private Preferences existingNode() {
-        try {
-            return root.nodeExists(Settings.NODE) ? root.node(Settings.NODE) : null;
-        } catch (BackingStoreException e) {
-            Log.info("settings: cannot read: " + e.getMessage());
-            return null;
-        }
+    /** The settings file, for Status. */
+    public java.io.File getFile() {
+        return file.getFile();
     }
 
     public synchronized Values current() {
@@ -72,8 +59,8 @@ public final class SettingsStore {
     }
 
     /** Stored values that were invalid and replaced by defaults, for the log and Status. */
-    public synchronized List<String> getLoadProblems() {
-        return new ArrayList<String>(loadProblems);
+    public synchronized List getLoadProblems() {
+        return new ArrayList(loadProblems);
     }
 
     public synchronized void addListener(Listener l) {
@@ -82,21 +69,19 @@ public final class SettingsStore {
 
     /** True if settings were ever saved (as opposed to all defaults on a fresh install). */
     public boolean hasBeenSaved() {
-        Preferences node = existingNode();
-        return node != null && node.get(Settings.VERSION_KEY, null) != null;
+        return file.get(Settings.VERSION_KEY) != null;
     }
 
     private Values read() {
-        Map<Setting<?>, Object> m = new HashMap<Setting<?>, Object>();
+        Map m = new HashMap();
         loadProblems.clear();
-        Preferences node = existingNode();
-        if (node == null) {
+        if (!file.exists()) {
             return new Values(m); // fresh install: all defaults
         }
-        List<Setting<?>> all = Settings.all();
+        List all = Settings.all();
         for (int i = 0; i < all.size(); i++) {
-            Setting<?> s = all.get(i);
-            String text = node.get(s.getKey(), null);
+            Setting s = (Setting) all.get(i);
+            String text = file.get(s.getKey());
             if (text == null) {
                 continue;
             }
@@ -114,41 +99,40 @@ public final class SettingsStore {
     /**
      * Saves all values and notifies listeners.
      *
-     * @throws BackingStoreException if the settings file cannot be written
+     * @throws IOException if the settings file cannot be written
      */
-    public void save(Values values) throws BackingStoreException {
+    public void save(Values values) throws IOException {
         Values before;
-        List<Listener> ls;
+        List ls;
         synchronized (this) {
-            Preferences node = node();
-            List<Setting<?>> all = Settings.all();
+            List all = Settings.all();
             for (int i = 0; i < all.size(); i++) {
-                putValue(node, all.get(i), values);
+                Setting st = (Setting) all.get(i);
+                file.put(st.getKey(), st.format(values.get(st)));
             }
-            node.putInt(Settings.VERSION_KEY, Settings.CURRENT_VERSION);
-            node.flush();
+            file.put(Settings.VERSION_KEY, Integer.toString(Settings.CURRENT_VERSION));
+            file.flush();
             before = current;
             current = values;
             loadProblems.clear();
-            ls = new ArrayList<Listener>(listeners);
+            ls = new ArrayList(listeners);
         }
         for (int i = 0; i < ls.size(); i++) {
-            ls.get(i).settingsChanged(before, values);
+            ((Listener) ls.get(i)).settingsChanged(before, values);
         }
-    }
-
-    private static <T> void putValue(Preferences node, Setting<T> s, Values values) {
-        node.put(s.getKey(), s.format(values.get(s)));
     }
 
     /** Remembers or forgets the username, leaving other settings as they are. */
-    public void rememberUsername(String username) throws BackingStoreException {
+    public void rememberUsername(String username) throws IOException {
         save(current().with(Settings.USERNAME, username == null ? "" : username));
     }
 
-    /** Writes the settings as standard java.util.prefs XML. */
-    public void exportXml(OutputStream out) throws IOException, BackingStoreException {
-        node().exportSubtree(out);
+    /**
+     * Writes the saved settings in Java's standard preferences XML format (as
+     * java.util.prefs exportSubtree did in versions up to 0.7).
+     */
+    public void exportXml(OutputStream out) throws IOException {
+        PrefsXml.write(out, file.getNode(), file.entries());
     }
 
     // ---- importing the old PASTE98.CFG / PASTE98.USR ---------------------------
@@ -196,14 +180,14 @@ public final class SettingsStore {
             { "username", Settings.USERNAME.getKey() },
         };
         Values v = current();
-        List<String> imported = new ArrayList<String>();
-        List<String> skipped = new ArrayList<String>();
+        List imported = new ArrayList();
+        List skipped = new ArrayList();
         for (int i = 0; i < mapping.length; i++) {
             String text = p.getProperty(mapping[i][0]);
             if (text == null || text.trim().length() == 0) {
                 continue;
             }
-            Setting<?> s = Settings.byKey(mapping[i][1]);
+            Setting s = Settings.byKey(mapping[i][1]);
             try {
                 v = withParsed(v, s, text);
                 imported.add(mapping[i][0]);
@@ -213,7 +197,7 @@ public final class SettingsStore {
         }
         try {
             save(v);
-        } catch (BackingStoreException e) {
+        } catch (IOException e) {
             Log.info("settings: cannot save imported settings: " + e.getMessage());
             return null;
         }
@@ -234,7 +218,7 @@ public final class SettingsStore {
     }
 
     /** Parses text for s and returns v with that value set. */
-    static <T> Values withParsed(Values v, Setting<T> s, String text) throws InvalidSettingException {
+    static Values withParsed(Values v, Setting s, String text) throws InvalidSettingException {
         return v.with(s, s.parse(text));
     }
 

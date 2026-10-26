@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -10,7 +10,6 @@
 package com.glitchwrks.paste98.client;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URL;
 import java.security.CodeSource;
 
@@ -36,6 +35,36 @@ public final class AppDir {
         return new File(get(), name);
     }
 
+    /**
+     * A file: URL's path with %XX escapes decoded as UTF-8 (java.net.URI is
+     * Java 1.4; URLDecoder would also wrongly turn '+' into a space).
+     */
+    static String decodePercent(String path) {
+        try {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            for (int i = 0; i < path.length(); i++) {
+                char c = path.charAt(i);
+                if (c == '%' && i + 2 < path.length()) {
+                    out.write(Integer.parseInt(path.substring(i + 1, i + 3), 16));
+                    i += 2;
+                } else {
+                    byte[] b = String.valueOf(c).getBytes("UTF-8");
+                    out.write(b, 0, b.length);
+                }
+            }
+            String s = new String(out.toByteArray(), "UTF-8");
+            // "/C:/Program Files/x" on Windows: drop the slash before the drive letter
+            if (s.length() > 2 && s.charAt(0) == '/' && s.charAt(2) == ':') {
+                s = s.substring(1);
+            }
+            return s;
+        } catch (java.io.UnsupportedEncodingException e) {
+            return path;
+        } catch (NumberFormatException e) {
+            return path;
+        }
+    }
+
     private static File find() {
         String override = System.getProperty("paste98.dir");
         if (override != null) {
@@ -45,7 +74,7 @@ public final class AppDir {
             CodeSource cs = AppDir.class.getProtectionDomain().getCodeSource();
             if (cs != null) {
                 URL url = cs.getLocation();
-                File f = new File(new URI(url.toString()));
+                File f = new File(decodePercent(url.getFile()));
                 File parent = f.isDirectory() ? f : f.getParentFile();
                 if (parent != null) {
                     return parent.getAbsoluteFile();

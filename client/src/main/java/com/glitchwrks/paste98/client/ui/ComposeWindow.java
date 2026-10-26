@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -9,6 +9,7 @@
  */
 package com.glitchwrks.paste98.client.ui;
 
+import java.awt.Frame;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -82,7 +83,7 @@ public final class ComposeWindow {
         clear.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 text.setText("");
-                text.requestFocusInWindow();
+                text.requestFocus();
             }
         });
 
@@ -135,21 +136,21 @@ public final class ComposeWindow {
         frame.getRootPane().setDefaultButton(null); // Enter types a newline
         frame.addWindowListener(new WindowAdapter() {
             public void windowActivated(WindowEvent e) {
-                text.requestFocusInWindow();
+                text.requestFocus();
             }
         });
         frame.pack();
-        frame.setLocationRelativeTo(null);
+        Dialogs.center(frame);
         updateCount();
     }
 
     public void show() {
-        if ((frame.getExtendedState() & JFrame.ICONIFIED) != 0) {
-            frame.setExtendedState(frame.getExtendedState() & ~JFrame.ICONIFIED);
+        if (frame.getState() == Frame.ICONIFIED) {
+            frame.setState(Frame.NORMAL);
         }
         frame.setVisible(true);
         frame.toFront();
-        text.requestFocusInWindow();
+        text.requestFocus();
     }
 
     public void hide() {

@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -14,8 +14,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.security.SecureRandom;
-import java.util.prefs.Preferences;
 
 import javax.swing.SwingUtilities;
 
@@ -23,7 +21,9 @@ import com.glitchwrks.paste98.api.PasteClient;
 import com.glitchwrks.paste98.api.PasteException;
 import com.glitchwrks.paste98.api.PasteResult;
 import com.glitchwrks.paste98.api.PinnedTransport;
-import com.glitchwrks.paste98.client.prefs.FilePreferencesFactory;
+import com.glitchwrks.paste98.tls.Randomness;
+import com.glitchwrks.paste98.client.prefs.SettingsFile;
+import com.glitchwrks.paste98.client.tray.NativeTray;
 import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.ui.Appearance;
@@ -45,10 +45,6 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        // First, before anything uses java.util.prefs: store settings in a
-        // file in the program folder rather than in the Windows registry.
-        FilePreferencesFactory.install();
-
         boolean tray = true;
         String sendFile = null;
         String user = null;
@@ -66,7 +62,8 @@ public final class Main {
             } else {
                 System.err.println("usage: java -jar GWPASTE.JAR [--no-tray]");
                 System.err.println("       java -jar GWPASTE.JAR --send FILE [--user NAME]");
-                System.err.println("         (password from the PASTE98_PASSWORD environment variable)");
+                System.err.println("         (password from the PASTE98_PASSWORD environment variable, or on Java 1.3");
+                System.err.println("          the paste98.password system property, which SENDFILE.BAT sets from it)");
                 System.exit(1);
             }
         }
@@ -88,10 +85,12 @@ public final class Main {
         Log.info(Version.NAME + " " + Version.VERSION + " starting; Java " + System.getProperty("java.version")
                 + " (" + System.getProperty("java.vm.name") + ") on " + System.getProperty("os.name") + " "
                 + System.getProperty("os.version") + "; folder " + AppDir.get());
+        Log.routeLibraryLogging();
+        setUpRandomness();
 
         SettingsStore settings = openSettings();
         String imported = settings.importLegacy(AppDir.get());
-        Appearance.apply(settings.current().get(Settings.LOOK));
+        Appearance.apply(settings.current().getText(Settings.LOOK));
 
         PasteService service = new PasteService(settings);
         service.warmUp(); // starts the slow first handshake immediately, in the background
@@ -116,7 +115,8 @@ public final class Main {
             return 1;
         }
         String user = userOverride != null ? userOverride : v.rememberedUsername();
-        String pw = System.getenv("PASTE98_PASSWORD");
+        setUpRandomness();
+        String pw = password();
         if (user == null || pw == null) {
             System.err.println("need a username (--user, or remembered in Settings) and the PASTE98_PASSWORD "
                     + "environment variable");
@@ -131,7 +131,7 @@ public final class Main {
         }
         long t0 = System.currentTimeMillis();
         try {
-            PasteClient client = new PasteClient(new PinnedTransport(v.tlsOptions()), new SecureRandom(),
+            PasteClient client = new PasteClient(new PinnedTransport(v.tlsOptions()), Randomness.get(),
                     Version.userAgent());
             PasteResult r = client.send(content, user, pw.toCharArray());
             System.out.println(r.getUrl());
@@ -144,19 +144,50 @@ public final class Main {
         }
     }
 
-    /** The settings, from java.util.prefs (normally the PASTE98.PRF file; see FilePreferencesFactory). */
+    /** The settings, from PASTE98.PRF in the program folder. */
     private static SettingsStore openSettings() {
-        Preferences root = Preferences.userRoot();
-        Log.info("settings backend: " + root.getClass().getName()
-                + (FilePreferencesFactory.isActive() ? " (" + FilePreferencesFactory.userFile() + ")" : ""));
-        return new SettingsStore(root);
+        SettingsFile file = new SettingsFile(SettingsFile.defaultFile(), Settings.NODE);
+        Log.info("settings file: " + file.getFile());
+        return new SettingsStore(file);
+    }
+
+    /**
+     * Seed sources for the program's SecureRandom: Windows' CryptGenRandom
+     * through the tray DLL where available, the seed file PASTE98.RND, and
+     * the rest (see Randomness). Java 1.3's own seeding takes 30 s and more.
+     */
+    static void setUpRandomness() {
+        Randomness.setSeedFile(AppDir.file("PASTE98.RND"));
+        Randomness.addSource(NativeTray.seedSource(AppDir.file("GWTRAY.DLL")));
+        Runtime.getRuntime().addShutdownHook(new Thread("seed-save") {
+            public void run() {
+                Randomness.saveSeed();
+            }
+        });
+    }
+
+    /**
+     * The password for --send: PASTE98_PASSWORD from the environment on Java 5+;
+     * Java 1.3 cannot read the environment (System.getenv throws), so
+     * SENDFILE.BAT passes it as the paste98.password system property.
+     */
+    static String password() {
+        String p = System.getProperty("paste98.password");
+        if (p != null && p.length() > 0) {
+            return p;
+        }
+        try {
+            return System.getenv("PASTE98_PASSWORD");
+        } catch (Throwable t) { // java.lang.Error on Java 1.3 and 1.4
+            return null;
+        }
     }
 
     /** Reads a text file in the platform's default encoding (cp1252 on an English Windows 98). */
     private static String readFile(File f) throws IOException {
         Reader r = new InputStreamReader(new FileInputStream(f));
         try {
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             char[] buf = new char[4096];
             int n;
             while ((n = r.read(buf)) > 0) {

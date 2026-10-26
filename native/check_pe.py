@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+# gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
 # Copyright (C) 2026 Glitch Works, LLC
 # Licensed under the GNU GPL v3 or later. See the LICENSE file for details.
 """
@@ -29,6 +29,8 @@ ALLOWED_IMPORTS = {
         "InitializeCriticalSection", "DeleteCriticalSection",
         "EnterCriticalSection", "LeaveCriticalSection",
         "InterlockedExchange", "lstrcpynA",
+        # nativeRandom finds CryptoAPI at run time (absent on early Windows 95)
+        "LoadLibraryA", "GetProcAddress", "FreeLibrary",
     },
     "user32.dll": {
         "RegisterClassA", "CreateWindowExA", "DestroyWindow", "DefWindowProcA",
@@ -49,6 +51,7 @@ EXPORT_ARG_BYTES = {
     _P + "nativeRun": 24,
     _P + "nativeSetTooltip": 12,
     _P + "nativeQuit": 8,
+    _P + "nativeRandom": 12,
 }
 REQUIRED_EXPORTS = set(EXPORT_ARG_BYTES)
 

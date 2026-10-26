@@ -1,12 +1,13 @@
 # gw_paste98
 
-A notification area ("system tray") program for Windows 98 that sends text to
+A notification area ("system tray") program for Windows 95 and 98 that sends text to
 the Glitch Works pastes service over modern TLS, and puts the new paste's
 address on the clipboard.
 
-It needs Java 5 (1.5.0_22 is what it was tested against). Encryption is TLS 1.2
-from Bouncy Castle, built into `GWPASTE.JAR`, so Java 5's outdated TLS support
-and certificate list are not used at all.
+It needs Java 1.3 or later: 1.3.1 is the last Java for Windows 95, and
+1.5.0_22 (Java 5) the last for Windows 98. Encryption is TLS 1.2 from Bouncy
+Castle, built into `GWPASTE.JAR`, so Java's own outdated TLS support and
+certificate list are not used at all.
 
 The full instructions are in the help, `GWPASTE.CHM`: choose **Help...** from
 the tray icon's menu, **gw_paste98 Help** in the Start Menu, or **Help** in
@@ -17,9 +18,9 @@ the Settings window. This file is a plain-text summary for the zip.
 | File | What it is |
 |---|---|
 | `GWPASTE.JAR` | The program |
-| `GWTRAY.DLL` | Lets Java 5 show a tray icon (Java 5 has no tray support of its own) |
+| `GWTRAY.DLL` | Lets Java show a tray icon (Java before 6 has no tray support), and supplies random numbers from Windows for the encryption |
 | `GWTRAY.ICO` | The tray icon |
-| `GWPASTE.CHM` | The help (HTML Help; Windows 98 includes the viewer) |
+| `GWPASTE.CHM` | The help (HTML Help; Windows 98 includes the viewer, Windows 95 gets it with Internet Explorer 4 or later) |
 | `PASTE98.BAT` | Starts the program (zip only; the installer makes Start Menu shortcuts) |
 | `SENDFILE.BAT` | Sends a text file from the command line |
 | `PASTE98.PRF` | Settings, written by the program (created when you first save settings) |
@@ -29,11 +30,11 @@ the Settings window. This file is a plain-text summary for the zip.
 
 ## Setting up
 
-Install Java 5 first (the 1.5.0_22 runtime is the last update for Windows 98).
+Install Java first, 1.3 or later (1.3.1 on Windows 95, 1.5.0_22 on Windows 98).
 
 ### With the installer
 
-1. Run `gw_paste98-VERSION-setup.exe`. It finds Java 5 through the registry
+1. Run `gw_paste98-VERSION-setup.exe`. It finds Java 1.3 or later through the registry
    and installs to `C:\Program Files\gw_paste98`, with a **gw_paste98** folder
    in the Start Menu (the program, its help and the uninstaller). Tick **Start with Windows** if you want it to start
    with Windows (it is off unless an earlier install had it on).
@@ -68,7 +69,7 @@ To start it with Windows, make a shortcut in
 
     "C:\Program Files\Java\jre1.5.0_22\bin\javaw.exe" -Xmx32m -jar C:\GW_PASTE98\GWPASTE.JAR
 
-adjusting both paths to where Java 5 and the program actually are.
+adjusting both paths to where Java and the program actually are.
 
 ## The key pin
 
@@ -152,8 +153,8 @@ Changes take effect on the next paste; no restart is needed.
 
 **Appearance.** The program looks like a Java program by default, using
 Swing's classic Metal look from Java 1.2 to 1.4. "Java Metal, Ocean" is the
-look Java 5 introduced. "Windows" uses the system's look, but not quite its
-text: Windows 98 draws dialogs in MS Sans Serif, a bitmap font, and Java can
+look Java 5 introduced (on older Java, Steel is used instead). "Windows" uses the system's look, but not quite its
+text: Windows 95 and 98 draw dialogs in MS Sans Serif, a bitmap font, and Java can
 only draw outline fonts. With "Windows" chosen, the program uses Microsoft
 Sans Serif (an outline version of MS Sans Serif, which comes with Windows
 2000 and later and some applications) or Tahoma if either is installed, and
@@ -184,7 +185,8 @@ checks every value, while a hand-edited mistake is ignored (with a note in
 
 sends a text file and prints the paste's address, using the settings saved by
 the tray program. The password comes from the `PASTE98_PASSWORD` environment
-variable and the username from the remembered username (or add `--user NAME`).
+variable (`SENDFILE.BAT` passes it to Java as a property, because Java 1.3
+cannot read the environment) and the username from the remembered username (or add `--user NAME`).
 For example:
 
     SET PASTE98_PASSWORD=yourpassword

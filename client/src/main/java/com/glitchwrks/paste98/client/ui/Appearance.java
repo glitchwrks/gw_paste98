@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 5 / Windows 98 client for the Glitch Works pastes service
+ * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -24,7 +24,7 @@ import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.metal.OceanTheme;
+import javax.swing.plaf.metal.MetalTheme;
 
 import com.glitchwrks.paste98.client.Log;
 
@@ -51,7 +51,7 @@ public final class Appearance {
     private static final String WINDOWS_LAF = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
 
     /** UIManager keys this class overrode, so switching away can remove them. */
-    private static final List<Object> overridden = new ArrayList<Object>();
+    private static final List overridden = new ArrayList();
 
     private static String description = "not set";
 
@@ -72,9 +72,14 @@ public final class Appearance {
             if (WINDOWS.equals(choice)) {
                 d = applyWindows();
             } else if (METAL_OCEAN.equals(choice)) {
-                MetalLookAndFeel.setCurrentTheme(new OceanTheme());
-                UIManager.setLookAndFeel(new MetalLookAndFeel());
-                d = "Java Metal (Ocean)";
+                MetalTheme ocean = ocean();
+                if (ocean == null) {
+                    d = applySteel() + "; Ocean needs Java 5";
+                } else {
+                    MetalLookAndFeel.setCurrentTheme(ocean);
+                    UIManager.setLookAndFeel(new MetalLookAndFeel());
+                    d = "Java Metal (Ocean)";
+                }
             } else {
                 d = applySteel();
             }
@@ -91,6 +96,17 @@ public final class Appearance {
     /** What {@link #apply} last set, for the Status window. */
     public static synchronized String describe() {
         return description;
+    }
+
+    /** Java 5's Ocean theme, or null on older Javas. Loaded by name: the program runs on Java 1.3. */
+    static MetalTheme ocean() {
+        try {
+            return (MetalTheme) Class.forName("javax.swing.plaf.metal.OceanTheme").newInstance();
+        } catch (Exception e) {
+            return null;
+        } catch (LinkageError e) {
+            return null;
+        }
     }
 
     private static String applySteel() throws Exception {
@@ -153,8 +169,8 @@ public final class Appearance {
      */
     static void overrideFonts(String family) {
         UIDefaults defaults = UIManager.getLookAndFeelDefaults();
-        List<Object> keys = new ArrayList<Object>();
-        for (Enumeration<?> e = defaults.keys(); e.hasMoreElements();) {
+        List keys = new ArrayList();
+        for (Enumeration e = defaults.keys(); e.hasMoreElements();) {
             keys.add(e.nextElement());
         }
         for (int i = 0; i < keys.size(); i++) {
