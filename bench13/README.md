@@ -81,3 +81,23 @@ constructor problem above, which no tool here could.
 - 0.1.1 then failed with `NoClassDefFoundError: javax/security/auth/Destroyable`,
   an interface BC's key classes implement, which animal-sniffer does not check;
   fixed, and checked for every class name, in 0.1.2.
+- **0.1.2 works end to end on Java 1.3.1** against production: pinned TLS 1.2
+  (ECDHE-RSA-AES256-GCM-SHA384), no errors, two runs.
+
+| | Java 5 | Java 1.3.1 |
+|---|---|---|
+| Java's own `SecureRandom` seeding | 0.22 s | 33.1 s |
+| Timing-jitter seed (`--fastseed`) | 1.75 s | 1.75 s |
+| X25519 keygen + agreement | 7.6 ms | 14.7-16.0 ms |
+| P-256 keygen + agreement | 23.3 ms | 28.3-29.0 ms |
+| RSA-2048 verify | 8.4 ms | 11.5 ms |
+| ECDSA P-256 verify | 6.9 ms | 8.8 ms |
+| SHA-256 | 6.5 MB/s | 7.2-7.4 MB/s |
+| AES-128-GCM / ChaCha20-Poly1305 | 2.5 / 4.6 MB/s | 2.3 / 3.4 MB/s |
+| First handshake | 1,040 ms | 820-880 ms |
+| Later handshakes | 220-330 ms | 270-330 ms |
+
+Conclusion: Java 1.3 is viable; handshakes cost about the same as on Java 5.
+The only blocker is seeding: a Java 1.3 client needs its own seed source
+(Windows' CryptGenRandom through the tray DLL where available, a seed file
+kept between runs, and timing jitter mixed in) instead of Java's 33 s one.
