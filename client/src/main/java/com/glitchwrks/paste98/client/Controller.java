@@ -16,10 +16,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import java.net.URL;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import com.glitchwrks.paste98.api.ContentCheck;
 import com.glitchwrks.paste98.api.PasteException;
@@ -29,6 +26,7 @@ import com.glitchwrks.paste98.client.settings.Settings;
 import com.glitchwrks.paste98.client.settings.SettingsStore;
 import com.glitchwrks.paste98.client.settings.Values;
 import com.glitchwrks.paste98.client.tray.NativeTray;
+import com.glitchwrks.paste98.client.ui.AppIcons;
 import com.glitchwrks.paste98.client.ui.Appearance;
 import com.glitchwrks.paste98.client.ui.ComposeWindow;
 import com.glitchwrks.paste98.client.ui.Dialogs;
@@ -66,8 +64,8 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
     public Controller(PasteService service) {
         this.service = service;
         this.settings = service.getSettings();
-        URL png = Controller.class.getResource("gwtray.png");
-        this.icon = png == null ? null : Toolkit.getDefaultToolkit().createImage(png);
+        this.icon = AppIcons.window();
+        AppIcons.install();
     }
 
     /**
@@ -328,15 +326,14 @@ public final class Controller implements NativeTray.Listener, ComposeWindow.Acti
     }
 
     private void showAbout() {
-        URL png = Controller.class.getResource("gwabout.png");
-        Icon logo = png == null ? null : new ImageIcon(png);
-        Dialogs.info(parent(), "About", logo, Version.NAME + " " + Version.VERSION
-                + "\nA Windows 98 client for the Glitch Works pastes service."
-                + "\n\nEncryption: TLS 1.2 by Bouncy Castle, server authenticated by a pinned key."
-                + "\nJava " + System.getProperty("java.version") + " on " + System.getProperty("os.name") + " "
-                + System.getProperty("os.version")
-                + "\n\nCopyright (C) 2026 Glitch Works, LLC. Free software under the GNU GPL v3 or later; "
-                + "see LICENSE.TXT. There is NO WARRANTY.");
+        Dialogs.about(parent(), AppIcons.about(),
+                Version.NAME + " " + Version.VERSION + "\nA Windows 98 client for the Glitch Works pastes service.",
+                AppIcons.javaRuntime(),
+                "Encryption: TLS 1.2 by Bouncy Castle, server authenticated by a pinned key."
+                        + "\nJava " + System.getProperty("java.version") + " on " + System.getProperty("os.name")
+                        + " " + System.getProperty("os.version"),
+                "Copyright (C) 2026 Glitch Works, LLC. Free software under the GNU GPL v3 or later; "
+                        + "see LICENSE.TXT. There is NO WARRANTY.");
     }
 
     public void exit() {

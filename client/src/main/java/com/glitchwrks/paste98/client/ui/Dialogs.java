@@ -176,6 +176,60 @@ public final class Dialogs {
         }
     }
 
+    /**
+     * The About window: the program's picture beside three blocks of text, with
+     * the Java runtime's icon (if any) beside the middle one.
+     */
+    public static void about(Component parent, Icon logo, String top, Icon java, String middle, String bottom) {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.gridy = 0;
+        p.add(textBlock(top, 44), c);
+
+        c.gridy = 1;
+        c.insets = new Insets(10, 0, 10, 0);
+        if (java != null) {
+            c.gridwidth = 1;
+            c.weightx = 0;
+            c.fill = GridBagConstraints.NONE;
+            c.anchor = GridBagConstraints.CENTER;
+            c.insets = new Insets(10, 0, 10, 8);
+            p.add(new JLabel(java), c);
+            c.gridx = 1;
+            c.weightx = 1;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(10, 0, 10, 0);
+            p.add(textBlock(middle, 44 - 6), c);
+            c.gridx = 0;
+            c.gridwidth = 2;
+        } else {
+            p.add(textBlock(middle, 44), c);
+        }
+
+        c.gridy = 2;
+        c.insets = new Insets(0, 0, 0, 0);
+        p.add(textBlock(bottom, 44), c);
+        JOptionPane.showMessageDialog(parent, p, TITLE + " - About", JOptionPane.INFORMATION_MESSAGE, logo);
+    }
+
+    /** Read-only wrapped text that looks like a label. */
+    private static JTextArea textBlock(String text, int columns) {
+        JTextArea a = new JTextArea(text, 0, columns);
+        a.setLineWrap(true);
+        a.setWrapStyleWord(true);
+        a.setEditable(false);
+        a.setOpaque(false);
+        a.setFont(new JLabel().getFont());
+        a.setSize(a.getPreferredSize());
+        return a;
+    }
+
     public static void error(Component parent, String title, String text) {
         message(parent, title, text, JOptionPane.ERROR_MESSAGE);
     }

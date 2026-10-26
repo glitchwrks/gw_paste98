@@ -44,6 +44,7 @@
         <directory>${project.basedir}/../native/prebuilt</directory>
         <includes>
           <include>gwtray.png</include>
+          <include>gwtray16.png</include>
           <include>gwabout.png</include>
         </includes>
         <targetPath>com/glitchwrks/paste98/client</targetPath>

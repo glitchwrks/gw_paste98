@@ -8,7 +8,9 @@ Generates the tray icon from the pixel art below, with no dependencies:
   gwtray.ico   16x16 and 32x32, 4 bits per pixel (16 colours) with an AND
                mask, which every Windows 98 shell displays correctly (32-bit
                alpha icons are a Windows XP feature)
-  gwtray.png   32x32 RGBA, for Swing window icons (Java 5 reads PNG, not ICO)
+  gwtray.png   32x32 RGBA (Java 5 reads PNG, not ICO)
+  gwtray16.png 16x16 RGBA, for window title bars: Java 5 takes one image per
+               window and scales it to 16x16 itself, which blurs the 32x32
 
 Usage: make_icon.py OUTPUT_DIR
 """
@@ -160,7 +162,8 @@ def main(outdir):
     os.makedirs(outdir, exist_ok=True)
     write_ico(os.path.join(outdir, "gwtray.ico"), [ART16, art32])
     write_png(os.path.join(outdir, "gwtray.png"), art32)
-    print("wrote gwtray.ico and gwtray.png to " + outdir)
+    write_png(os.path.join(outdir, "gwtray16.png"), ART16)
+    print("wrote gwtray.ico, gwtray.png and gwtray16.png to " + outdir)
 
 
 if __name__ == "__main__":
