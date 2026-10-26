@@ -23,6 +23,7 @@
     <module>core</module>
     <module>client</module>
     <module>bench</module>
+    <module>bench13</module>
   </modules>
 
   <properties>

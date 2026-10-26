@@ -79,6 +79,7 @@ effect and adds it only after you confirm you have checked it.
 | `core/` | Pinned TLS 1.2 client (`tls`) and pastes API client (`api`); shared |
 | `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
 | `bench/` | `pastebench`, the TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
+| `bench13/` | `pastebench13`, the same pinned TLS 1.2 handshake on Java 1.3 (the newest for Windows 95), with Bouncy Castle's Java 1.4 build retargeted to 1.3 at build time; builds `bench13/target/pastebench13-win9x.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
 | `tools/` | `fake_pastes_server.py`, a local stand-in for the pastes service, for testing |
 

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.glitchwrks.paste98</groupId>
+    <artifactId>gw_paste98-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>gw_paste98-bench13</artifactId>
+  <name>gw_paste98 pastebench13</name>
+  <description>Pinned TLS 1.2 benchmark for Java 1.3 (Windows 95)</description>
+
+  <properties>
+    <asm.version>9.7</asm.version>
+    <animal-sniffer.version>1.24</animal-sniffer.version>
+  </properties>
+
+  <dependencies>
+    <!-- Bouncy Castle's Java 1.4 builds; Retarget13 adapts them for 1.3 at package time. -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk14</artifactId>
+      <version>${bc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bctls-jdk14</artifactId>
+      <version>${bc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcutil-jdk14</artifactId>
+      <version>${bc.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>pastebench13</finalName>
+    <plugins>
+      <!-- Java 1.3 source and class files (JDK 8's javac is the last that can make them). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.3</source>
+          <target>1.3</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-libs</id>
+            <phase>package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-java13-signature</id>
+            <phase>package</phase>
+            <goals><goal>copy</goal></goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.codehaus.mojo.signature</groupId>
+                  <artifactId>java13</artifactId>
+                  <version>1.0</version>
+                  <classifier>java13</classifier>
+                  <type>signature</type>
+                  <destFileName>java13.signature</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/sig</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--
+        PB13.JAR: Bouncy Castle retargeted to Java 1.3 (src/build/java/Retarget13),
+        shrunk with this benchmark by ProGuard, then checked against the Java 1.3
+        API (Check13). The build fails if anything in the jar needs a newer Java.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>animal-sniffer</artifactId>
+            <version>${animal-sniffer.version}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>retarget-shrink-check</id>
+            <phase>package</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <property name="t" value="${project.build.directory}"/>
+                <delete dir="${t}/build-tools"/>
+                <mkdir dir="${t}/build-tools"/>
+                <javac srcdir="${project.basedir}/src/build/java" destdir="${t}/build-tools"
+                       classpathref="maven.plugin.classpath" includeantruntime="false"
+                       source="1.8" target="1.8" debug="true" encoding="UTF-8"/>
+                <path id="tools.cp">
+                  <pathelement location="${t}/build-tools"/>
+                  <path refid="maven.plugin.classpath"/>
+                </path>
+
+                <delete dir="${t}/bc13"/>
+                <mkdir dir="${t}/bc13"/>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bcprov-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bcprov13.jar"/>
+                </java>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bctls-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bctls13.jar"/>
+                </java>
+                <java classname="Retarget13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/lib/bcutil-jdk14-${bc.version}.jar"/>
+                  <arg value="${t}/bc13/bcutil13.jar"/>
+                </java>
+
+                <delete file="${t}/PB13.JAR"/>
+                <java classname="proguard.ProGuard" fork="true" failonerror="true"
+                      classpathref="maven.plugin.classpath">
+                  <sysproperty key="target.dir" value="${t}"/>
+                  <sysproperty key="manifest.dir" value="${project.basedir}/src/proguard/manifest"/>
+                  <sysproperty key="jdk8.home" value="${java.home}/.."/>
+                  <arg value="@${project.basedir}/src/proguard/shrink.pro"/>
+                </java>
+
+                <delete dir="${t}/pb13-unpacked"/>
+                <unzip src="${t}/PB13.JAR" dest="${t}/pb13-unpacked"/>
+                <java classname="Check13" classpathref="tools.cp" fork="true" failonerror="true">
+                  <arg value="${t}/PB13.JAR"/>
+                  <arg value="${t}/sig/java13.signature"/>
+                  <arg value="${t}/pb13-unpacked"/>
+                </java>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- target/pastebench13-win9x.zip -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/win9x.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>win9x-zip</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

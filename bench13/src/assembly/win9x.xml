@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Zip ready to copy to the Windows 9x machine:
+    pastebench13\PB13.JAR       benchmark + Bouncy Castle, retargeted to Java 1.3 and shrunk
+    pastebench13\SETJAVA.BAT    path to Java 1.3 (edit if needed)
+    pastebench13\BENCH13.BAT    full run on Java 1.3      -> BENCH13.TXT
+    pastebench13\FAST13.BAT     same, fast seeding      -> FAST13.TXT
+    pastebench13\BENCH5.BAT     same jar on the PATH Java -> BENCH5.TXT
+    pastebench13\SHOWPIN.BAT, BENCH13.CFG, README.TXT
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>win9x</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>pastebench13</baseDirectory>
+  <files>
+    <file>
+      <source>${project.build.directory}/PB13.JAR</source>
+    </file>
+    <file>
+      <source>README.md</source>
+      <destName>README.TXT</destName>
+      <lineEnding>dos</lineEnding>
+    </file>
+  </files>
+  <fileSets>
+    <fileSet>
+      <directory>src/dist</directory>
+      <outputDirectory></outputDirectory>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+  </fileSets>
+</assembly>

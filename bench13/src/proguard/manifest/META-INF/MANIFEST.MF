@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Main-Class: com.glitchwrks.paste98.bench13.Bench13
+
