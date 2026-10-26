@@ -48,11 +48,12 @@ Options: `java -jar PB13.JAR --help`.
 
 Bouncy Castle publishes current builds for Java 1.4 (`bc*-jdk14`, the same
 1.86 release the client uses), but none for 1.3. The parts this program uses
-need only two things Java 1.3 lacks, so the build adapts them:
+need only three things Java 1.3 lacks, so the build adapts them:
 
 - `src/build/java/Retarget13.java` (run at build time with ASM) points BC's
   `java.util.logging` calls at do-nothing stand-ins (`compat13.Logger` and
-  `Level`), replaces exception cause chaining (`initCause`, `X(Throwable)`
+  `Level`) and its uses of `javax.security.auth.Destroyable` (core only from
+  1.4) at `compat13.Destroyable`, replaces exception cause chaining (`initCause`, `X(Throwable)`
   constructors, both 1.4) with `compat13.Causes`, and marks every class file
   as Java 1.3 (version 47). One real bytecode difference: javac 1.4 sets an
   inner class's outer-instance and captured-variable fields before calling the
@@ -63,8 +64,10 @@ need only two things Java 1.3 lacks, so the build adapts them:
 - ProGuard shrinks the result with the benchmark into `PB13.JAR`.
 - `src/build/java/Check13.java` then fails the build unless every class in
   the jar is a Java 1.3 class file and nothing in it uses a JDK class, method
-  or field that Java 1.3 lacks (animal-sniffer's java13 signature), and no
-  constructor stores a field before calling its superclass constructor.
+  or field that Java 1.3 lacks (animal-sniffer's java13 signature), mentions
+  no class Java 1.3 lacks anywhere (superclasses, interfaces and descriptors
+  too, which animal-sniffer does not check), and no constructor stores a field
+  before calling its superclass constructor.
 
 What a static check cannot see is behaviour that changed between versions;
 only a run on a real Java 1.3 settles that. The first T22 run found the
@@ -75,3 +78,6 @@ constructor problem above, which no tool here could.
 - Java 1.3.1's own `SecureRandom` seeding: **33 s** (Java 5: 0.2 s). The
   client cannot use it on Java 1.3; `--fastseed` (timing jitter) took 1.8 s.
 - Version 0.1.0 then failed with the `VerifyError` above; fixed in 0.1.1.
+- 0.1.1 then failed with `NoClassDefFoundError: javax/security/auth/Destroyable`,
+  an interface BC's key classes implement, which animal-sniffer does not check;
+  fixed, and checked for every class name, in 0.1.2.

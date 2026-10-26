@@ -43,6 +43,8 @@ import org.objectweb.asm.tree.VarInsnNode;
  * The parts of BC this program uses need only two things 1.3 lacks:
  * - java.util.logging (bctls logs at FINE): references are renamed to the
  *   do-nothing stand-ins in com.glitchwrks.paste98.compat13.
+ * - javax.security.auth.Destroyable and DestroyFailedException (core only
+ *   from 1.4), implemented by BC's private key classes: renamed likewise.
  * - exception causes: x.initCause(c) becomes Causes.initCause(x, c), and
  *   JDK exception constructors taking a cause, X(Throwable) and
  *   X(String, Throwable), become X(String), keeping a message.
@@ -62,6 +64,8 @@ public final class Retarget13 {
 
     static final String COMPAT = "com/glitchwrks/paste98/compat13/";
     static final String LOGGING = "java/util/logging/";
+    /** Single classes 1.3 lacks, renamed to stand-ins of the same simple name. */
+    static final String[] RENAMED = { "javax/security/auth/Destroyable", "javax/security/auth/DestroyFailedException" };
 
     /** JDK exception classes whose cause-taking constructors 1.3 lacks. */
     static final String[] CAUSE_CTOR_OWNERS = { "java/lang/Throwable", "java/lang/Exception",
@@ -72,6 +76,7 @@ public final class Retarget13 {
     static int rewrittenInitCause;
     static int rewrittenCtors;
     static int renamedLogging;
+    static int renamedOther;
     static int movedFieldStores;
 
     public static void main(String[] args) throws IOException {
@@ -108,7 +113,8 @@ public final class Retarget13 {
             zin.close();
         }
         System.out.println("Retarget13: " + in.getName() + " -> " + out.getName() + ": " + classes
-                + " classes; " + renamedLogging + " logging references, " + rewrittenInitCause
+                + " classes; " + renamedLogging + " logging and " + renamedOther + " Destroyable references, "
+                + rewrittenInitCause
                 + " initCause calls, " + rewrittenCtors + " cause constructors rewritten, " + movedFieldStores
                 + " constructors' early field stores moved after super()");
     }
@@ -126,6 +132,12 @@ public final class Retarget13 {
                 if (internalName.startsWith(LOGGING)) {
                     renamedLogging++;
                     return COMPAT + internalName.substring(LOGGING.length());
+                }
+                for (int i = 0; i < RENAMED.length; i++) {
+                    if (RENAMED[i].equals(internalName)) {
+                        renamedOther++;
+                        return COMPAT + internalName.substring(internalName.lastIndexOf('/') + 1);
+                    }
                 }
                 return internalName;
             }
