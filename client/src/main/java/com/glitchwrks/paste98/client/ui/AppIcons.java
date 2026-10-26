@@ -59,40 +59,60 @@ public final class AppIcons {
     }
 
     /**
-     * The running Java's own icon, as Windows shows it for javaw.exe: 32x32
-     * if available, else 16x16. Null off Windows or if Windows has none. Read
-     * from the installed runtime rather than shipped with the program.
+     * Programs in the Java runtime's bin folder to take the Java icon from, in
+     * order. Java 5's java.exe and javaw.exe have no icon of their own (Windows
+     * shows the generic program icon), while its Control Panel and Web Start
+     * carry the Java cup. Last resort: javaw.exe.
+     */
+    static final String[] JAVA_ICON_SOURCES = { "javacpl.exe", "javaws.exe", "jucheck.exe", "jusched.exe",
+        "javaw.exe" };
+
+    /**
+     * The installed Java's icon, as Windows shows it for one of the runtime's
+     * own programs: 32x32 if available, else 16x16. Null off Windows or if none
+     * is found. Read from the installed runtime rather than shipped with this
+     * program.
      */
     public static Icon javaRuntime() {
         if (!System.getProperty("os.name", "").startsWith("Windows")) {
             return null;
         }
         File bin = new File(System.getProperty("java.home", ""), "bin");
-        File exe = new File(bin, "javaw.exe");
-        if (!exe.isFile()) {
-            exe = new File(bin, "java.exe");
+        for (int i = 0; i < JAVA_ICON_SOURCES.length; i++) {
+            File exe = new File(bin, JAVA_ICON_SOURCES[i]);
+            if (exe.isFile()) {
+                Icon icon = iconOf(exe);
+                if (icon != null) {
+                    Log.info("about: Java icon from " + exe + " (" + icon.getIconWidth() + "x"
+                            + icon.getIconHeight() + ")");
+                    return icon;
+                }
+            }
         }
-        if (!exe.isFile()) {
-            return null;
-        }
+        Log.info("about: no Java icon found in " + bin);
+        return null;
+    }
+
+    /** The icon Windows shows for a file: 32x32 if available, else 16x16, else null. */
+    private static Icon iconOf(File f) {
         try {
             // sun.awt.shell.ShellFolder.getIcon(true) gives the 32x32 icon on Java 5;
             // reflection, as it is not a public API.
             Class<?> c = Class.forName("sun.awt.shell.ShellFolder");
             Object folder = c.getMethod("getShellFolder", new Class[] { File.class }).invoke(null,
-                    new Object[] { exe });
+                    new Object[] { f });
             Object image = c.getMethod("getIcon", new Class[] { Boolean.TYPE }).invoke(folder,
                     new Object[] { Boolean.TRUE });
             if (image instanceof Image) {
                 return new ImageIcon((Image) image);
             }
         } catch (Throwable t) {
-            Log.info("about: no large Java icon (" + t + "); trying the small one");
+            Log.info("about: no large icon for " + f + " (" + t + ")");
         }
         try {
-            return FileSystemView.getFileSystemView().getSystemIcon(exe);
+            return FileSystemView.getFileSystemView().getSystemIcon(f);
         } catch (Throwable t) {
-            Log.info("about: no Java icon: " + t);
+            Log.info("about: no icon for " + f + ": " + t);
             return null;
         }
     }
