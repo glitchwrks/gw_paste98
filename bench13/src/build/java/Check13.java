@@ -24,11 +24,20 @@ import java.util.zip.ZipFile;
 
 import org.codehaus.mojo.animal_sniffer.SignatureChecker;
 import org.codehaus.mojo.animal_sniffer.logging.Logger;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Build-time check of the final jar: fails unless every class file is Java 1.3
  * (version 47 or lower) and nothing refers to a JDK class, method or field
- * that Java 1.3 lacks (checked against animal-sniffer's java13 signature).
+ * that Java 1.3 lacks (checked against animal-sniffer's java13 signature),
+ * and no constructor stores to its own fields before calling super(), which
+ * Java 1.3's verifier rejects but later ones (including JDK 8's) accept.
  * References to classes inside the jar itself are fine.
  *
  * Usage: Check13 JAR java13.signature UNPACKED_DIR
@@ -46,6 +55,7 @@ public final class Check13 {
 
         Set<String> own = new HashSet<String>();
         int tooNew = 0;
+        int earlyStores = 0;
         int classCount = 0;
         ZipFile z = new ZipFile(jar);
         try {
@@ -60,6 +70,18 @@ public final class Check13 {
                 String cls = name.substring(0, name.length() - 6).replace('/', '.');
                 own.add(cls);
                 own.add(cls.replace('$', '.')); // the checker writes nested classes as Outer.Inner
+                ClassNode cn = new ClassNode();
+                InputStream cin = z.getInputStream(entry);
+                new ClassReader(cin).accept(cn, 0);
+                cin.close();
+                for (int mi = 0; mi < cn.methods.size(); mi++) {
+                    MethodNode m = (MethodNode) cn.methods.get(mi);
+                    if (m.name.equals("<init>") && storesBeforeSuper(cn, m)) {
+                        System.err.println("Check13: " + cn.name + " " + m.desc
+                                + " stores a field before super() (Java 1.3 rejects this)");
+                        earlyStores++;
+                    }
+                }
                 InputStream in = z.getInputStream(entry);
                 byte[] head = new byte[8];
                 int got = 0;
@@ -119,12 +141,31 @@ public final class Check13 {
         for (String ref : missing) {
             System.err.println("Check13: not in Java 1.3: " + ref);
         }
-        if (tooNew > 0 || !missing.isEmpty()) {
+        if (tooNew > 0 || !missing.isEmpty() || earlyStores > 0) {
             System.err.println("Check13: FAILED: " + tooNew + " class files too new, " + missing.size()
-                    + " references to APIs Java 1.3 lacks");
+                    + " references to APIs Java 1.3 lacks, " + earlyStores + " constructors storing fields before super()");
             System.exit(1);
         }
         System.out.println("Check13: " + jar.getName() + ": " + classCount
-                + " classes, all Java 1.3 class files using only the Java 1.3 API");
+                + " classes, all Java 1.3 class files using only the Java 1.3 API, no field stores before super()");
+    }
+
+    /** True if the constructor writes one of its own class's fields before its super()/this() call. */
+    static boolean storesBeforeSuper(ClassNode c, MethodNode m) {
+        int pending = 0;
+        for (AbstractInsnNode x = m.instructions.getFirst(); x != null; x = x.getNext()) {
+            int op = x.getOpcode();
+            if (op == Opcodes.NEW) {
+                pending++;
+            } else if (op == Opcodes.INVOKESPECIAL && ((MethodInsnNode) x).name.equals("<init>")) {
+                if (pending == 0) {
+                    return false;
+                }
+                pending--;
+            } else if (op == Opcodes.PUTFIELD && ((FieldInsnNode) x).owner.equals(c.name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

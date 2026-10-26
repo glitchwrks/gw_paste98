@@ -25,6 +25,16 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FrameNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 /**
  * Build-time tool (runs on the build JDK, not on Windows): makes Bouncy
@@ -36,8 +46,13 @@ import org.objectweb.asm.commons.Remapper;
  * - exception causes: x.initCause(c) becomes Causes.initCause(x, c), and
  *   JDK exception constructors taking a cause, X(Throwable) and
  *   X(String, Throwable), become X(String), keeping a message.
- * Every class file is also re-marked as version 47 (Java 1.3); 1.4 class
- * files (48) use no bytecode features 1.3 lacks.
+ * Every class file is also re-marked as version 47 (Java 1.3). The one
+ * bytecode difference that matters: javac 1.4 stores an inner class's outer
+ * instance and captured variables before calling the superclass constructor,
+ * which Java 1.3's verifier rejects ("Expecting to find object/array on
+ * stack"); later verifiers, including JDK 8's for old class files, accept it.
+ * Those stores are moved to just after the superclass constructor call, the
+ * order javac 1.3 used.
  *
  * Check13 then verifies the final jar against the Java 1.3 API.
  *
@@ -57,6 +72,7 @@ public final class Retarget13 {
     static int rewrittenInitCause;
     static int rewrittenCtors;
     static int renamedLogging;
+    static int movedFieldStores;
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
@@ -93,7 +109,8 @@ public final class Retarget13 {
         }
         System.out.println("Retarget13: " + in.getName() + " -> " + out.getName() + ": " + classes
                 + " classes; " + renamedLogging + " logging references, " + rewrittenInitCause
-                + " initCause calls, " + rewrittenCtors + " cause constructors rewritten");
+                + " initCause calls, " + rewrittenCtors + " cause constructors rewritten, " + movedFieldStores
+                + " constructors' early field stores moved after super()");
     }
 
     static byte[] retarget(byte[] classFile, String name) {
@@ -103,7 +120,7 @@ public final class Retarget13 {
             throw new IllegalStateException(name + " is class version " + major
                     + "; only Java 1.4 (48) and older can be retargeted");
         }
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        ClassNode node = new ClassNode();
         Remapper remapper = new Remapper() {
             public String map(String internalName) {
                 if (internalName.startsWith(LOGGING)) {
@@ -113,7 +130,7 @@ public final class Retarget13 {
                 return internalName;
             }
         };
-        ClassVisitor v = new ClassVisitor(Opcodes.ASM9, writer) {
+        ClassVisitor v = new ClassVisitor(Opcodes.ASM9, node) {
             public void visit(int version, int access, String n, String sig, String superName, String[] itfs) {
                 super.visit(Opcodes.V1_3, access, n, sig, superName, itfs);
             }
@@ -123,7 +140,91 @@ public final class Retarget13 {
             }
         };
         reader.accept(new ClassRemapper(v, remapper), 0);
+        for (int i = 0; i < node.methods.size(); i++) {
+            MethodNode m = (MethodNode) node.methods.get(i);
+            if (m.name.equals("<init>")) {
+                moveEarlyFieldStores(node, m, name);
+            }
+        }
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        node.accept(writer);
         return writer.toByteArray();
+    }
+
+    static boolean isMeta(AbstractInsnNode i) {
+        return i instanceof LabelNode || i instanceof LineNumberNode || i instanceof FrameNode;
+    }
+
+    static boolean isLoad(int op) {
+        return op == Opcodes.ALOAD || op == Opcodes.ILOAD || op == Opcodes.LLOAD || op == Opcodes.FLOAD
+                || op == Opcodes.DLOAD;
+    }
+
+    /**
+     * javac 1.4 starts a constructor with "this.f = param" stores (aload_0,
+     * load, putfield) before the super(...) call. Moves them to just after it.
+     */
+    static void moveEarlyFieldStores(ClassNode c, MethodNode m, String where) {
+        InsnList code = m.instructions;
+        InsnList moved = new InsnList();
+        AbstractInsnNode i = code.getFirst();
+        while (true) {
+            while (i != null && isMeta(i)) {
+                i = i.getNext();
+            }
+            if (i == null || i.getOpcode() != Opcodes.ALOAD || ((VarInsnNode) i).var != 0) {
+                break;
+            }
+            AbstractInsnNode load = next(i);
+            AbstractInsnNode put = load == null ? null : next(load);
+            if (load == null || !isLoad(load.getOpcode()) || ((VarInsnNode) load).var == 0 || put == null
+                    || put.getOpcode() != Opcodes.PUTFIELD || !((FieldInsnNode) put).owner.equals(c.name)) {
+                break;
+            }
+            AbstractInsnNode after = put.getNext();
+            code.remove(i);
+            code.remove(load);
+            code.remove(put);
+            moved.add(i);
+            moved.add(load);
+            moved.add(put);
+            i = after;
+        }
+
+        // Find this constructor's own super(...) or this(...) call: the first
+        // INVOKESPECIAL <init> not paired with a NEW for an argument.
+        AbstractInsnNode superCall = null;
+        int pending = 0;
+        for (AbstractInsnNode x = code.getFirst(); x != null; x = x.getNext()) {
+            if (x.getOpcode() == Opcodes.NEW) {
+                pending++;
+            } else if (x.getOpcode() == Opcodes.INVOKESPECIAL && ((MethodInsnNode) x).name.equals("<init>")) {
+                if (pending == 0) {
+                    superCall = x;
+                    break;
+                }
+                pending--;
+            } else if (x.getOpcode() == Opcodes.PUTFIELD && ((FieldInsnNode) x).owner.equals(c.name)) {
+                throw new IllegalStateException(where + " " + m.desc
+                        + ": a field store before super() that Retarget13 cannot move");
+            }
+        }
+        if (moved.size() == 0) {
+            return;
+        }
+        if (superCall == null) {
+            throw new IllegalStateException(where + " " + m.desc + ": no super() call found");
+        }
+        code.insert(superCall, moved);
+        movedFieldStores++;
+    }
+
+    static AbstractInsnNode next(AbstractInsnNode i) {
+        AbstractInsnNode n = i.getNext();
+        while (n != null && isMeta(n)) {
+            n = n.getNext();
+        }
+        return n;
     }
 
     static boolean isCauseCtorOwner(String owner) {

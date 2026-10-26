@@ -54,11 +54,24 @@ need only two things Java 1.3 lacks, so the build adapts them:
   `java.util.logging` calls at do-nothing stand-ins (`compat13.Logger` and
   `Level`), replaces exception cause chaining (`initCause`, `X(Throwable)`
   constructors, both 1.4) with `compat13.Causes`, and marks every class file
-  as Java 1.3 (version 47; 1.4's 48 adds no bytecode features).
+  as Java 1.3 (version 47). One real bytecode difference: javac 1.4 sets an
+  inner class's outer-instance and captured-variable fields before calling the
+  superclass constructor, which Java 1.3's verifier rejects (`VerifyError:
+  Expecting to find object/array on stack`) while later verifiers, JDK 8's
+  included, accept it. Retarget13 moves those stores to just after the
+  superclass constructor call, as javac 1.3 did.
 - ProGuard shrinks the result with the benchmark into `PB13.JAR`.
 - `src/build/java/Check13.java` then fails the build unless every class in
   the jar is a Java 1.3 class file and nothing in it uses a JDK class, method
-  or field that Java 1.3 lacks (animal-sniffer's java13 signature).
+  or field that Java 1.3 lacks (animal-sniffer's java13 signature), and no
+  constructor stores a field before calling its superclass constructor.
 
 What a static check cannot see is behaviour that changed between versions;
-only a run on a real Java 1.3 settles that.
+only a run on a real Java 1.3 settles that. The first T22 run found the
+constructor problem above, which no tool here could.
+
+## Results so far (ThinkPad T22, Windows 98)
+
+- Java 1.3.1's own `SecureRandom` seeding: **33 s** (Java 5: 0.2 s). The
+  client cannot use it on Java 1.3; `--fastseed` (timing jitter) took 1.8 s.
+- Version 0.1.0 then failed with the `VerifyError` above; fixed in 0.1.1.

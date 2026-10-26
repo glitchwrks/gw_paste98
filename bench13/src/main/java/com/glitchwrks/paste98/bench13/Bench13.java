@@ -38,7 +38,7 @@ import org.bouncycastle.tls.crypto.impl.bc.BcTlsCrypto;
  */
 public final class Bench13 {
 
-    static final String VERSION = "0.1.0";
+    static final String VERSION = "0.1.1";
 
     private String host = "pastes.glitchwrks.com";
     private int port = 443;
