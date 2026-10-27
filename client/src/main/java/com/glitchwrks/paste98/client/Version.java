@@ -13,7 +13,7 @@ package com.glitchwrks.paste98.client;
 public final class Version {
 
     public static final String NAME = "gw_paste98";
-    public static final String VERSION = "0.8.0";
+    public static final String VERSION = "0.8.1";
 
     private Version() {
     }

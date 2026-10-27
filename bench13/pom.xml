@@ -140,6 +140,16 @@
                   <arg value="${t}/sig/java13.signature"/>
                   <arg value="${t}/pb13-unpacked"/>
                 </java>
+                <!-- Second opinion from the JDK's @since tags: the java13 signature lists
+                     non-public members, so a constructor made public in 1.4 got through. -->
+                <java classname="Since13" classpathref="tools.cp" fork="true" failonerror="true" maxmemory="2g">
+                  <classpath>
+                    <pathelement location="${java.home}/../lib/tools.jar"/>
+                  </classpath>
+                  <arg value="${t}/PB13.JAR"/>
+                  <arg value="${java.home}/../src.zip"/>
+                  <arg value="${java.home}/lib/rt.jar"/>
+                </java>
               </target>
             </configuration>
           </execution>

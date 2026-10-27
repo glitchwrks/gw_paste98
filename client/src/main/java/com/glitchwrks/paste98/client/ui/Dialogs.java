@@ -251,6 +251,25 @@ public final class Dialogs {
         w.setLocation(Math.max(0, (screen.width - size.width) / 2), Math.max(0, (screen.height - size.height) / 2));
     }
 
+    /**
+     * Centres a window over another (or the screen if owner is null or not
+     * showing), kept on screen. Window.setLocationRelativeTo is Java 1.4.
+     */
+    public static void centerOn(java.awt.Window w, java.awt.Component owner) {
+        if (owner == null || !owner.isShowing()) {
+            center(w);
+            return;
+        }
+        java.awt.Dimension screen = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        java.awt.Dimension size = w.getSize();
+        java.awt.Point o = owner.getLocationOnScreen();
+        int x = o.x + (owner.getWidth() - size.width) / 2;
+        int y = o.y + (owner.getHeight() - size.height) / 2;
+        x = Math.max(0, Math.min(x, screen.width - size.width));
+        y = Math.max(0, Math.min(y, screen.height - size.height));
+        w.setLocation(x, y);
+    }
+
     /** Long messages as a wrapped, read-only text area rather than one wide line. */
     private static Object wrap(String text) {
         if (text.length() < 70 && text.indexOf('\n') < 0) {

@@ -37,7 +37,7 @@ public final class Log {
 
     public static synchronized void open(File logFile) {
         try {
-            file = new PrintStream(new FileOutputStream(logFile, false), true);
+            file = new PrintStream(new FileOutputStream(logFile.getPath()) /* (File, boolean) is Java 1.4 */, true);
         } catch (IOException e) {
             System.err.println("cannot write log " + logFile + ": " + e);
         }

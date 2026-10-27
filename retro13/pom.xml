@@ -29,6 +29,14 @@
       <artifactId>animal-sniffer</artifactId>
       <version>${animal-sniffer.version}</version>
     </dependency>
+    <!-- Since13 reads the JDK's @since tags with javac's tree API (JDK 8's tools.jar). -->
+    <dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+      <version>1.8</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/../lib/tools.jar</systemPath>
+    </dependency>
     <!-- Tests run retargeted code against the compat13 classes in core. -->
     <dependency>
       <groupId>com.glitchwrks.paste98</groupId>

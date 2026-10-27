@@ -170,7 +170,7 @@ final class PinVerifyDialog {
         dialog.getContentPane().add(body, BorderLayout.CENTER);
         dialog.getContentPane().add(buttons, BorderLayout.SOUTH);
         dialog.pack();
-        dialog.setLocationRelativeTo(owner);
+        Dialogs.centerOn(dialog, owner);
     }
 
     /**

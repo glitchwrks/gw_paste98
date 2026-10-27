@@ -170,7 +170,7 @@ public final class SettingsDialog {
         dialog.getContentPane().add(top, BorderLayout.CENTER);
         dialog.getContentPane().add(buttons, BorderLayout.SOUTH);
         dialog.pack();
-        dialog.setLocationRelativeTo(owner);
+        Dialogs.centerOn(dialog, owner);
     }
 
     /**

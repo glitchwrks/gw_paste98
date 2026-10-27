@@ -25,7 +25,10 @@ service, with an LLM doing much of the work.
   still show them; and field stores javac 1.4 places before `super()`, which
   Java 1.3's verifier rejects, are moved after it. `Check13` then fails the
   build unless every class in the shipped jar is Java 1.3 bytecode using only
-  the Java 1.3 API.
+  the Java 1.3 API, and `Since13` gives a second opinion from the `@since`
+  tags in the JDK's own source: animal-sniffer's java13 signature also lists
+  non-public members, which let `FileOutputStream(File, boolean)` (public
+  only from 1.4) into 0.8.0, where it stopped the program at start-up.
 - **Random numbers without the half-minute wait.** Java 1.3 seeds
   `SecureRandom` by timing threads, which took 33 s on the T22. The client
   seeds it instead with SHA-256 of Windows' `CryptGenRandom` (via
@@ -94,7 +97,7 @@ effect and adds it only after you confirm you have checked it.
 
 | Path | What |
 |---|---|
-| `retro13/` | Build tools: `Retarget13` (Bouncy Castle's Java 1.4 jars to Java 1.3) and `Check13` (verifies a jar against the Java 1.3 API) |
+| `retro13/` | Build tools: `Retarget13` (Bouncy Castle's Java 1.4 jars to Java 1.3), `Check13` (verifies a jar against the Java 1.3 API signature) and `Since13` (the same against the JDK source's `@since` tags) |
 | `core/` | Pinned TLS 1.2 client (`tls`), pastes API client (`api`) and the Java 1.3 stand-ins (`compat13`); shared |
 | `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
 | `bench/` | `pastebench`, the Java 5 TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
