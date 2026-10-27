@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
+ * Paste Jar - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -644,7 +644,7 @@ public final class SettingsDialog {
             return;
         }
         JFileChooser fc = chooser();
-        fc.setSelectedFile(new File(fc.getCurrentDirectory(), "PASTE98.XML"));
+        fc.setSelectedFile(new File(fc.getCurrentDirectory(), "PASTEJAR.XML"));
         if (fc.showSaveDialog(dialog) != JFileChooser.APPROVE_OPTION) {
             return;
         }

@@ -1,6 +1,6 @@
 # pastebench13
 
-Part of [gw_paste98](../README.md). Can a Java 1.3 runtime, the newest Sun
+Part of [Paste Jar](../README.md) (formerly gw_paste98). Can a Java 1.3 runtime, the newest Sun
 released for Windows 95, do the paste client's pinned TLS 1.2 handshake, and
 how fast? This answers that before any of the client is ported.
 

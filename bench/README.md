@@ -1,6 +1,6 @@
 # pastebench
 
-Part of [gw_paste98](../README.md). The pinned TLS client it measures lives in
+Part of [Paste Jar](../README.md) (formerly gw_paste98). The pinned TLS client it measures lives in
 the shared `core` module.
 
 TLS benchmark for the Java 5 / Windows 98SE paste client. It measures what the

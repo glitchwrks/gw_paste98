@@ -1,5 +1,5 @@
 /*
- * gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
+ * Paste Jar - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
  * Copyright (C) 2026 Glitch Works, LLC
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -19,7 +19,7 @@ import java.util.Map;
 import com.glitchwrks.paste98.client.prefs.PrefsXml;
 
 /**
- * Reads gw_paste98 settings out of a Java preferences XML export (as written
+ * Reads Paste Jar (formerly gw_paste98) settings out of a Java preferences XML export (as written
  * by {@link SettingsStore#exportXml}, or by versions up to 0.7 through
  * java.util.prefs), without importing it into the live settings: the values
  * go into the Settings dialog for review, and are only saved when the user
@@ -46,12 +46,12 @@ public final class XmlImport {
 
     /**
      * @param base values for settings the file does not mention
-     * @throws IOException if the file is not a preferences export containing gw_paste98 settings
+     * @throws IOException if the file is not a preferences export containing Paste Jar settings
      */
     public static Result read(InputStream in, Values base) throws IOException {
         Map entries = PrefsXml.read(in, Settings.NODE);
         if (entries == null) {
-            throw new IOException("the file contains no gw_paste98 settings");
+            throw new IOException("the file contains no Paste Jar settings");
         }
         Values v = base;
         int count = 0;

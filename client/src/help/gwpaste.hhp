@@ -8,10 +8,10 @@ Default Window=main
 Display compile progress=No
 Full-text search=Yes
 Language=0x409 English (United States)
-Title=gw_paste98 Help
+Title=Paste Jar Help
 
 [WINDOWS]
-main="gw_paste98 Help","toc.hhc","index.hhk","overview.htm","overview.htm",,,,,0x63520,220,0x387e,[60,40,700,560],,,,,,,0
+main="Paste Jar Help","toc.hhc","index.hhk","overview.htm","overview.htm",,,,,0x63520,220,0x387e,[60,40,700,560],,,,,,,0
 
 [FILES]
 overview.htm

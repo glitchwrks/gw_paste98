@@ -11,7 +11,7 @@
   </parent>
 
   <artifactId>gw_paste98-core</artifactId>
-  <name>gw_paste98 core</name>
+  <name>Paste Jar core</name>
   <description>Pinned TLS 1.2 client and pastes API client, shared by the tray client and the benchmark</description>
 
   <dependencies>

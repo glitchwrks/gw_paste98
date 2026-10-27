@@ -79,7 +79,7 @@ public class HelpTest {
 
     @Test
     public void hhTargetFormat() {
-        File chm = new File("C:\\Program Files\\gw_paste98\\GWPASTE.CHM");
+        File chm = new File("C:\\Program Files\\Paste Jar\\GWPASTE.CHM");
         assertEquals(chm.getPath() + "::/set_server.htm", Help.target(chm, Help.settingsTopic("Server")));
         assertEquals(chm.getPath(), Help.target(chm, null));
     }

@@ -16,7 +16,7 @@
     finished jar against Java 1.3. Used by the client and pastebench13 builds.
   -->
   <artifactId>gw_paste98-retro13</artifactId>
-  <name>gw_paste98 Java 1.3 build tools</name>
+  <name>Paste Jar Java 1.3 build tools</name>
 
   <dependencies>
     <dependency>

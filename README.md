@@ -1,8 +1,8 @@
-# gw_paste98
+# Paste Jar
 
 A Windows 95/98 tray client, running on Java 1.3 or later, for the
 [Glitch Works pastes service](https://github.com/glitchwrks/pastes), using
-modern TLS on a period machine.
+modern TLS on a period machine. Called gw_paste98 up to version 0.8.1.
 
 This is a hobbyist proof of concept exploring how far a legacy platform can be
 brought up to an adequate level of encrypted communication with a modern
@@ -99,7 +99,7 @@ effect and adds it only after you confirm you have checked it.
 |---|---|
 | `retro13/` | Build tools: `Retarget13` (Bouncy Castle's Java 1.4 jars to Java 1.3), `Check13` (verifies a jar against the Java 1.3 API signature) and `Since13` (the same against the JDK source's `@since` tags) |
 | `core/` | Pinned TLS 1.2 client (`tls`), pastes API client (`api`) and the Java 1.3 stand-ins (`compat13`); shared |
-| `client/` | Swing tray application; builds `client/target/gw_paste98-win98.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/gw_paste98-VERSION-setup.exe` (script in `client/src/installer/`) |
+| `client/` | Swing tray application; builds `client/target/pastejar-win9x.zip`, the help `GWPASTE.CHM` (sources in `client/src/help/`) and the installer `client/target/pastejar-VERSION-setup.exe` (script in `client/src/installer/`) |
 | `bench/` | `pastebench`, the Java 5 TLS benchmark used to tune the client; builds `bench/target/pastebench-win98.zip` |
 | `bench13/` | `pastebench13`, the same pinned TLS 1.2 handshake on Java 1.3 (the newest for Windows 95), with Bouncy Castle's Java 1.4 build retargeted to 1.3 at build time; builds `bench13/target/pastebench13-win9x.zip` |
 | `native/` | `gwtray.dll` source, build script and checker; the built DLL and icon are in `native/prebuilt/` |
@@ -212,7 +212,15 @@ in the About window (`native/make_logo.py`).
 0.7.2 is the last release for Java 5 only (branch `java5-0.7.x`). 0.8.0 runs on
 Java 1.3 and later, and so on Windows 95. `pastebench13` showed Bouncy Castle's
 TLS 1.2 handshake working on Java 1.3.1 on the T22 (about 0.85 s for the first
-handshake, 0.3 s after).
+handshake, 0.3 s after). 0.8.1 is verified on the T22 with Java 1.3.1,
+seeding from Windows' `CryptGenRandom`.
+
+0.9.0 renames the program from gw_paste98 to Paste Jar (repository
+`glitchwrks/pastejar`). It installs to `Program Files\Paste Jar`, and its
+installer moves an existing gw_paste98 install over: settings, key pins, seed
+file and the Start with Windows choice, then removes the old program files,
+Start Menu items and Add/Remove entry. The 8.3 file names (`GWPASTE.JAR`,
+`PASTE98.PRF` and so on) and the Java packages are unchanged.
 
 ## Licence
 

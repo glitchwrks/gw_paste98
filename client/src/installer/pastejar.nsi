@@ -1,4 +1,4 @@
-; gw_paste98 - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
+; Paste Jar - Java 1.3+ / Windows 95 and 98 client for the Glitch Works pastes service
 ; Copyright (C) 2026 Glitch Works, LLC
 ;
 ; This program is free software: you can redistribute it and/or modify it
@@ -8,7 +8,7 @@
 ;
 ; Windows installer, built by the client module's Maven build (NSIS 3):
 ;
-;   makensis -DVERSION=0.5.0 -DSTAGE=<staged files> -DOUTFILE=<setup.exe> gw_paste98.nsi
+;   makensis -DVERSION=0.9.0 -DSTAGE=<staged files> -DOUTFILE=<setup.exe> pastejar.nsi
 ;
 ; ANSI on purpose: NSIS Unicode installers do not run on Windows 95/98/ME.
 ; Keep this file ASCII.
@@ -26,18 +26,23 @@ SetCompressor /SOLID lzma
 !include "WordFunc.nsh"
 !include "WinVer.nsh"
 
-!define APP "gw_paste98"
-!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\gw_paste98"
+!define APP "Paste Jar"
+!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\PasteJar"
 !define JRE_KEY "SOFTWARE\JavaSoft\Java Runtime Environment"
-!define MENU_DIR "$SMPROGRAMS\gw_paste98"
-!define STARTUP_LNK "$SMSTARTUP\gw_paste98.lnk"
+!define MENU_DIR "$SMPROGRAMS\Paste Jar"
+!define STARTUP_LNK "$SMSTARTUP\Paste Jar.lnk"
+; The program's name up to 0.8.1. Setup moves such an install over (MigrateOld).
+!define OLD_APP "gw_paste98"
+!define OLD_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\gw_paste98"
+!define OLD_MENU_DIR "$SMPROGRAMS\gw_paste98"
+!define OLD_STARTUP_LNK "$SMSTARTUP\gw_paste98.lnk"
 !define JAVA_ARGS "-Xmx32m -jar"
 ; Window class of the hidden window gwtray.dll creates (native/gwtray.c).
 !define TRAY_CLASS "GwPaste98Tray"
 
 Name "${APP} ${VERSION}"
 OutFile "${OUTFILE}"
-InstallDir "$PROGRAMFILES\gw_paste98"
+InstallDir "$PROGRAMFILES\Paste Jar"
 InstallDirRegKey HKLM "${UNINST_KEY}" "InstallLocation"
 RequestExecutionLevel admin
 BrandingText "${APP} ${VERSION}"
@@ -80,7 +85,7 @@ ShowUninstDetails show
 ; No Finish page: on Windows 98 (ThinkPad T22, 0.6.0) moving from the log to
 ; MUI2's Finish page crashed Windows with a fatal exception 0E in the ENABLE
 ; VxD, with or without its checkboxes. Setup ends on the log page instead, and
-; "Start gw_paste98 when setup closes" replaces the Finish page's Run box.
+; "Start Paste Jar when setup closes" replaces the Finish page's Run box.
 
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
@@ -152,8 +157,8 @@ Function TryJava
   Pop $R0
 FunctionEnd
 
-; Sets $RUNNING to 1 if gw_paste98 is running, either as a tray icon (the
-; DLL's hidden window) or as the fallback window. Windows cannot replace or
+; Sets $RUNNING to 1 if the program (under either name) is running, either as
+; a tray icon (the DLL's hidden window) or as the fallback window. Windows cannot replace or
 ; delete GWTRAY.DLL and GWPASTE.JAR while they are in use.
 !macro CHECK_RUNNING un
 Function ${un}CheckRunning
@@ -162,6 +167,8 @@ Function ${un}CheckRunning
   FindWindow $0 "${TRAY_CLASS}" ""
   IntCmp $0 0 0 running running
   FindWindow $0 "SunAwtFrame" "${APP}"
+  IntCmp $0 0 0 running running
+  FindWindow $0 "SunAwtFrame" "${OLD_APP}"
   IntCmp $0 0 done running running
   running:
   MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION \
@@ -174,6 +181,57 @@ FunctionEnd
 !insertmacro CHECK_RUNNING ""
 !insertmacro CHECK_RUNNING "un."
 
+
+; Copies one settings file from the old folder ($R0) unless the new folder
+; already has one.
+!macro MOVE_SETTING name
+  ${If} ${FileExists} "$R0\${name}"
+  ${AndIfNot} ${FileExists} "$INSTDIR\${name}"
+    CopyFiles /SILENT "$R0\${name}" "$INSTDIR\${name}"
+    DetailPrint "Copied ${name} from $R0"
+  ${EndIf}
+!macroend
+
+; Moves an install of gw_paste98 (this program's name up to 0.8.1) over to
+; Paste Jar: settings, key pins and the seed file are copied to the new
+; folder, and the old program files, shortcuts and Add/Remove entry go. The
+; Start with Windows choice is carried over by .onInit.
+Function MigrateOld
+  ReadRegStr $R0 HKLM "${OLD_UNINST_KEY}" "InstallLocation"
+  StrCmp $R0 "" done
+  DetailPrint "Moving ${OLD_APP} from $R0"
+  ${If} $R0 != $INSTDIR
+    !insertmacro MOVE_SETTING "PASTE98.PRF"
+    !insertmacro MOVE_SETTING "PASTE98.BAK"
+    !insertmacro MOVE_SETTING "PASTE98.RND"
+    !insertmacro MOVE_SETTING "PASTE98.OLD"
+    Delete "$R0\GWPASTE.JAR"
+    Delete "$R0\GWTRAY.DLL"
+    Delete "$R0\GWTRAY.ICO"
+    Delete "$R0\GWPASTE.CHM"
+    Delete "$R0\README.TXT"
+    Delete "$R0\LICENSE.TXT"
+    Delete "$R0\SENDFILE.BAT"
+    Delete "$R0\UNINST.EXE"
+    Delete "$R0\PASTE98.LOG"
+    Delete "$R0\PASTE98.RND"
+    ; Old settings only once the new folder has its copy.
+    ${If} ${FileExists} "$INSTDIR\PASTE98.PRF"
+      Delete "$R0\PASTE98.PRF"
+      Delete "$R0\PASTE98.BAK"
+      Delete "$R0\PASTE98.OLD"
+    ${EndIf}
+    RMDir "$R0" ; only if empty
+  ${EndIf}
+  Delete "${OLD_MENU_DIR}\${OLD_APP}.lnk"
+  Delete "${OLD_MENU_DIR}\${OLD_APP} Help.lnk"
+  Delete "${OLD_MENU_DIR}\Read me.lnk"
+  Delete "${OLD_MENU_DIR}\Uninstall ${OLD_APP}.lnk"
+  RMDir "${OLD_MENU_DIR}"
+  Delete "${OLD_STARTUP_LNK}"
+  DeleteRegKey HKLM "${OLD_UNINST_KEY}"
+  done:
+FunctionEnd
 
 Function StartProgram
   SetOutPath "$INSTDIR"
@@ -196,6 +254,7 @@ Section "${APP} (required)" SecMain
   File "${STAGE}\GWPASTE.CHM"
   File "${STAGE}\LICENSE.TXT"
   ; Settings (PASTE98.PRF) are not in the installer, so they are never touched.
+  Call MigrateOld
   Delete "$INSTDIR\README.TXT" ; 0.5.x; replaced by the help
 
   ; SENDFILE.BAT with full paths, so it works from any folder without Java on
@@ -232,7 +291,7 @@ Section "${APP} (required)" SecMain
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayName" "${APP} ${VERSION}"
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM "${UNINST_KEY}" "Publisher" "Glitch Works, LLC"
-  WriteRegStr HKLM "${UNINST_KEY}" "URLInfoAbout" "https://github.com/glitchwrks/gw_paste98"
+  WriteRegStr HKLM "${UNINST_KEY}" "URLInfoAbout" "https://github.com/glitchwrks/pastejar"
   WriteRegStr HKLM "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\GWTRAY.ICO"
   WriteRegStr HKLM "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKLM "${UNINST_KEY}" "UninstallString" '"$INSTDIR\UNINST.EXE"'
@@ -306,8 +365,9 @@ Function .onInit
     Abort
   ${EndIf}
 
-  ; Upgrading: keep an existing "Start with Windows" choice.
+  ; Upgrading: keep an existing "Start with Windows" choice, under either name.
   ${If} ${FileExists} "${STARTUP_LNK}"
+  ${OrIf} ${FileExists} "${OLD_STARTUP_LNK}"
     !insertmacro SelectSection ${SecStartup}
   ${EndIf}
 FunctionEnd
@@ -345,6 +405,7 @@ Section "Uninstall"
   Delete "$INSTDIR\LICENSE.TXT"
   Delete "$INSTDIR\SENDFILE.BAT"
   Delete "$INSTDIR\PASTE98.LOG"
+  Delete "$INSTDIR\PASTE98.RND" ; random seed, not a setting
   Delete "$INSTDIR\UNINST.EXE"
 
   ${If} ${FileExists} "$INSTDIR\PASTE98.PRF"

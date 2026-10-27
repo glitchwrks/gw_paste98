@@ -1,8 +1,9 @@
-# gw_paste98
+# Paste Jar
 
 A notification area ("system tray") program for Windows 95 and 98 that sends text to
 the Glitch Works pastes service over modern TLS, and puts the new paste's
-address on the clipboard.
+address on the clipboard. Up to version 0.8.1 it was called gw_paste98; the
+installer moves an existing gw_paste98 install, settings included, to Paste Jar.
 
 It needs Java 1.3 or later: 1.3.1 is the last Java for Windows 95, and
 1.5.0_22 (Java 5) the last for Windows 98. Encryption is TLS 1.2 from Bouncy
@@ -10,7 +11,7 @@ Castle, built into `GWPASTE.JAR`, so Java's own outdated TLS support and
 certificate list are not used at all.
 
 The full instructions are in the help, `GWPASTE.CHM`: choose **Help...** from
-the tray icon's menu, **gw_paste98 Help** in the Start Menu, or **Help** in
+the tray icon's menu, **Paste Jar Help** in the Start Menu, or **Help** in
 the Settings window. This file is a plain-text summary for the zip.
 
 ## Files
@@ -21,7 +22,7 @@ the Settings window. This file is a plain-text summary for the zip.
 | `GWTRAY.DLL` | Lets Java show a tray icon (Java before 6 has no tray support), and supplies random numbers from Windows for the encryption |
 | `GWTRAY.ICO` | The tray icon |
 | `GWPASTE.CHM` | The help (HTML Help; Windows 98 includes the viewer, Windows 95 gets it with Internet Explorer 4 or later) |
-| `PASTE98.BAT` | Starts the program (zip only; the installer makes Start Menu shortcuts) |
+| `PASTEJAR.BAT` | Starts the program (zip only; the installer makes Start Menu shortcuts) |
 | `SENDFILE.BAT` | Sends a text file from the command line |
 | `PASTE98.PRF` | Settings, written by the program (created when you first save settings) |
 | `PASTE98.BAK` | The previous `PASTE98.PRF`, kept in case saving is interrupted |
@@ -34,28 +35,28 @@ Install Java first, 1.3 or later (1.3.1 on Windows 95, 1.5.0_22 on Windows 98).
 
 ### With the installer
 
-1. Run `gw_paste98-VERSION-setup.exe`. It finds Java 1.3 or later through the registry
-   and installs to `C:\Program Files\gw_paste98`, with a **gw_paste98** folder
+1. Run `pastejar-VERSION-setup.exe`. It finds Java 1.3 or later through the registry
+   and installs to `C:\Program Files\Paste Jar`, with a **Paste Jar** folder
    in the Start Menu (the program, its help and the uninstaller). Tick **Start with Windows** if you want it to start
    with Windows (it is off unless an earlier install had it on).
 2. Press **Close** at the end of setup; the program starts if **Start
-   gw_paste98 when setup closes** was ticked, or start it from the Start Menu. A paste jar
+   Paste Jar when setup closes** was ticked, or start it from the Start Menu. A paste jar
    icon appears in the notification area, and the Settings window opens.
 3. Enter the server's key pin (next section) and press OK.
 
 To upgrade, exit the program and run the new setup; your settings in
 `PASTE98.PRF` are kept. The shortcuts point at the Java found during setup,
 so run setup again if you move or replace Java. To remove the program, use
-**Add/Remove Programs** or **Uninstall gw_paste98** in the Start Menu; it asks
+**Add/Remove Programs** or **Uninstall Paste Jar** in the Start Menu; it asks
 whether to keep your settings and key pins.
 
 The installer writes its own `SENDFILE.BAT` with full paths, so it works from
-any folder. `PASTE98.BAT` is only in the zip.
+any folder. `PASTEJAR.BAT` is only in the zip.
 
 ### From the zip
 
-1. Copy the `gw_paste98` folder anywhere, for example `C:\GW_PASTE98`.
-2. Run `PASTE98.BAT`. A paste jar icon appears in the notification area, and
+1. Copy the `pastejar` folder anywhere, for example `C:\PASTEJAR`.
+2. Run `PASTEJAR.BAT`. A paste jar icon appears in the notification area, and
    the Settings window opens.
 3. Enter the server's key pin (next section) and press OK.
 
@@ -67,7 +68,7 @@ installer instead, copy `PASTE98.PRF` into the installed folder.)
 To start it with Windows, make a shortcut in
 `C:\WINDOWS\Start Menu\Programs\StartUp` with the target
 
-    "C:\Program Files\Java\jre1.5.0_22\bin\javaw.exe" -Xmx32m -jar C:\GW_PASTE98\GWPASTE.JAR
+    "C:\Program Files\Java\jre1.5.0_22\bin\javaw.exe" -Xmx32m -jar C:\PASTEJAR\GWPASTE.JAR
 
 adjusting both paths to where Java and the program actually are.
 

@@ -27,8 +27,8 @@ public class ClientPiecesTest {
 
     @Test
     public void programFolderUrlsDecode() throws Exception {
-        assertEquals("C:/Program Files/gw_paste98/GWPASTE.JAR",
-                AppDir.decodePercent("/C:/Program%20Files/gw_paste98/GWPASTE.JAR"));
+        assertEquals("C:/Program Files/Paste Jar/GWPASTE.JAR",
+                AppDir.decodePercent("/C:/Program%20Files/Paste%20Jar/GWPASTE.JAR"));
         assertEquals("/home/a+b/caf\u00e9/x.jar", AppDir.decodePercent("/home/a+b/caf%C3%A9/x.jar"));
         assertEquals("/odd%zz", AppDir.decodePercent("/odd%zz"));
         // the result matches what java.net.URI (Java 1.4+) gives for the same URL

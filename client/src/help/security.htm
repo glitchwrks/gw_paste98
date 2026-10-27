@@ -1,6 +1,6 @@
 <html><head><title>How the connection is secured</title><link rel="stylesheet" href="style.css"></head><body>
 <h1>How the connection is secured</h1>
-<p>The encryption support in Java 1.3 to 5 stops at TLS 1.0 (Java 1.3 has none built in at all) and trusts certificate authorities long since replaced, so a modern server cannot be reached with it. gw_paste98 carries its own:</p>
+<p>The encryption support in Java 1.3 to 5 stops at TLS 1.0 (Java 1.3 has none built in at all) and trusts certificate authorities long since replaced, so a modern server cannot be reached with it. Paste Jar carries its own:</p>
 <ul>
 <li><b>TLS 1.2 from Bouncy Castle.</b> The encryption code is built into <code>GWPASTE.JAR</code>, so Java's outdated TLS support and certificate list are not used at all.</li>
 <li><b>A pinned server key instead of certificate authorities.</b> The program talks only to a server whose public key matches one of the <a href="keypin.htm">key pins</a> in Settings. Let's Encrypt certificate renewals make no difference, as long as the server keeps the same key.</li>
